@@ -5,7 +5,7 @@ from Section import Section
 from Enrollment import Enrollment
 
 def main():
-    print()
+    print("Hello")
 
 
 
