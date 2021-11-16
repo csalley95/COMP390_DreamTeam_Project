@@ -1,6 +1,7 @@
+import sqlite3 as sql
 class Enrollment:
 
-    def __init__(self, studentID, sectionID):
+    def __init__(self, studentID, sectionID, conn: sql.Connection, curs: sql.Cursor):
         self.studentID = studentID
         self.sectionID = sectionID
 
