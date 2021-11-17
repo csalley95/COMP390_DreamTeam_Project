@@ -18,6 +18,11 @@ class Course:
                         VALUES (?,?,?)""", (self.Course_ID, self.Course_Credits, self.Course_Description))
         self.conn.commit()
 
+    def getCourse(self):
+        self.curs.execute("""SELECT * FROM Course WHERE CourseID = ?, self.CourseID""")
+        course_info = self.curs.fetchone()
+        return course_info
+
     def editCourse(self):
         global field_to_edit
         valid_entry = None
@@ -27,13 +32,13 @@ class Course:
                 valid_entry = True
         if(field_to_edit == 1):  # edit Course_Credits
             updated_credits = input('Enter credit amount: ')  # place holder until gui
-            sql_update_query = """Update Course set Coures_Credits = ? where CourseID = ?"""
+            sql_update_query = """Update Course set Coures_Credits = ? WHERE CourseID = ?"""
             data = (updated_credits, self.Course_ID)
             self.curs.execute(sql_update_query, data)
             self.conn.commit()
         elif(field_to_edit == 2):  # edit Course_Description
             updated_description = input('Enter new Course Description: ')  # place holder until gui
-            sql_update_query = """Update Course set Coures_Description = ? where CourseID = ?"""
+            sql_update_query = """Update Course set Coures_Description = ? WHERE CourseID = ?"""
             data = (updated_description, self.Course_ID)
             self.curs.execute(sql_update_query, data)
             self.conn.commit()

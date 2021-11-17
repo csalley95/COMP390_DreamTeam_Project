@@ -1,6 +1,7 @@
 import sqlite3
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QApplication, QLineEdit
 
+from Course import Course
 from Student import Student
 
 
@@ -19,7 +20,7 @@ class MainWindow(QMainWindow):
         # sub menu
         self.student_menu = StudentMenu(self, self.conn, self.curs)
         self.faculty_menu = FacultyMenu(self)
-        self.course_menu = CourseMenu(self)
+        self.course_menu = CourseMenu(self, self.conn, self.curs)
 
         self.setup_ui()  # needs to be at end of constructor
 
@@ -163,7 +164,7 @@ class StudentMenu(QMainWindow):
 
     def remove_student_submit(self):
         student_to_remove = Student(self.studentID_entry.text().strip(), 0,
-                                 self.conn, self.curs)
+                                    self.conn, self.curs)
         # student_to_remove.removeStudent()
         # check for validity
         # display confirmation
@@ -198,7 +199,9 @@ class FacultyMenu(QMainWindow):
 
 class CourseMenu(QMainWindow):
 
-    def __init__(self, previous_window):
+    def __init__(self, previous_window, conn: sqlite3.Connection, curs: sqlite3.Cursor):
+        self.conn = conn
+        self.curs = curs
         self.previous_window = previous_window
         super(CourseMenu, self).__init__()
         self.setWindowTitle('NorthStar Registration System/Course')
@@ -208,9 +211,107 @@ class CourseMenu(QMainWindow):
         self.back_button = QPushButton(self)
         self.back_button.setText("Back")
         self.back_button.resize(150, 50)
-        self.back_button.move(50, 200)
+        self.back_button.move(50, 300)
         self.back_button.clicked.connect(self.go_back)
 
+        # buttons for window
+        self.add_course_open = False
+        self.add_course_button = QPushButton(self)
+        self.add_course_button.setText('Add Course')
+        self.add_course_button.resize(150, 50)
+        self.add_course_button.move(50, 200)
+        self.add_course_button.clicked.connect(self.add_course)
+
+        self.edit_course_open = False
+        self.edit_course_button = QPushButton(self)
+        self.edit_course_button.setText('Edit Course')
+        self.edit_course_button.resize(150, 50)
+        self.edit_course_button.move(50, 250)
+        self.edit_course_button.clicked.connect(self.edit_course)
+
+        # widgets for add_course
+        self.courseID_entry = QLineEdit(self)
+        self.courseID_entry.setPlaceholderText('Course ID')
+        self.courseID_entry.resize(280, 40)
+        self.courseID_entry.move(400, 200)
+        self.courseID_entry.hide()
+
+        self.course_credits_entry = QLineEdit(self)
+        self.course_credits_entry.setPlaceholderText('Credits')
+        self.course_credits_entry.resize(140, 40)
+        self.course_credits_entry.move(400, 300)
+        self.course_credits_entry.hide()
+
+        self.course_description_entry = QLineEdit(self)
+        self.course_description_entry.setPlaceholderText('Course Description')
+        self.course_description_entry.resize(280, 40)
+        self.course_description_entry.move(400, 400)
+        self.course_description_entry.hide()
+
+        self.add_course_done = QPushButton(self)
+        self.add_course_done.setText('Add')
+        self.add_course_done.resize(150, 50)
+        self.add_course_done.move(400, 500)
+        self.add_course_done.hide()
+        self.add_course_done.clicked.connect(self.add_course_submit)
+
+        # widgets for edit_course
+        self.get_course_info_button = QPushButton(self)
+        self.get_course_info_button.setText('Search')
+        self.get_course_info_button.resize(150, 50)
+        self.get_course_info_button.move(700, 200)
+        self.get_course_info_button.hide()
+        self.get_course_info_button.clicked.connect(self.get_course_info)
+
     def go_back(self):
-        self.previous_window.show()
-        self.hide()
+        if self.add_course_open:
+            self.close_add_course()
+        elif self.edit_course_open:
+            self.close_edit_course()
+        else:
+            self.previous_window.show()
+            self.close()
+
+    def add_course(self):
+        self.add_course_open = True
+        self.courseID_entry.show()
+        self.course_credits_entry.show()
+        self.course_description_entry.show()
+        self.add_course_done.show()
+
+    def add_course_submit(self):
+        course_to_add = Course(self.courseID_entry.text().strip(), self.course_credits_entry.text().strip(),
+                               self.course_description_entry.text().strip(),
+                               self.conn, self.curs)
+        # course_to_add.addCourse()
+        # need to have database check for validity
+        # display confirmation screen
+        self.close_add_course()
+
+    def close_add_course(self):
+        self.courseID_entry.hide()
+        self.course_credits_entry.hide()
+        self.course_description_entry.hide()
+        self.add_course_done.hide()
+        self.courseID_entry.setText('')
+        self.course_credits_entry.setText('')
+        self.course_description_entry.setText('')
+        self.add_course_open = False
+
+    def edit_course(self):
+        self.edit_course_open = True
+        self.courseID_entry.show()
+        self.get_course_info_button.show()
+
+
+    def get_course_info(self):
+        self.courseID_entry.close()
+        self.get_course_info_button.close()
+        temp_course = Course(self.courseID_entry.text().strip(), 0, 0, self.conn, self.curs)
+        course_to_edit = temp_course.getCourse()
+        self.courseID_entry.setText(course_to_edit[0])
+        self.course_credits_entry.setText(str(course_to_edit[1]))
+        self.course_description_entry.setText(course_to_edit[2])
+        self.courseID_entry.show()
+        self.course_credits_entry.show()
+        self.course_description_entry.show()

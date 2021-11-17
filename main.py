@@ -16,7 +16,7 @@ from Enrollment import Enrollment
 def main():
     conn, curs = open_db('NorthStarProject.db')
 
-    #test_select(curs, """SELECT * FROM Course""")
+    #test_select(curs, """SELECT * FROM Course WHERE CourseID = 'DRM150' """)
 
     app = GUI.QApplication(sys.argv)
     window = GUI.MainWindow(conn, curs)
