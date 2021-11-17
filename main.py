@@ -3,6 +3,7 @@ from typing import Tuple
 import pandas as pd
 import sys
 
+import GUI
 from Student import Student
 from Instructor import Instructor
 from Course import Course
@@ -15,10 +16,14 @@ from Enrollment import Enrollment
 def main():
     conn, curs = open_db('NorthStarProject.db')
 
-    test_select(curs, """SELECT * FROM Course""")
+    #test_select(curs, """SELECT * FROM Course""")
 
-    input('Press Enter to close program')  # Temporary way of keeping this open until we create gui
-    close_db(conn)
+    app = GUI.QApplication(sys.argv)
+    window = GUI.MainWindow(conn, curs)
+    window.show()
+    sys.exit(app.exec_())
+
+    #close_db(conn)
 
 
 def open_db(filename: str) -> Tuple[sql.Connection, sql.Cursor]:
