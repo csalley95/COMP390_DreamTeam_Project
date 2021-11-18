@@ -13,7 +13,7 @@ class Instructor:
         self.conn.commit()
 
     def removeInstructor(self):
-        sql_update_query = """Update Instructor set instructorID = ?, set instructorName = ? WHERE instuctorID = ?"""
-        data = (self.instructorID, self.instructorName, self.instructorID)
+        sql_update_query = """DELETE FROM Instructor WHERE instuctorID = ?"""
+        data = (self.instructorID)
         self.curs.execute(sql_update_query, data)
         self.conn.commit()
