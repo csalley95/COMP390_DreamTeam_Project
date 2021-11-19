@@ -283,10 +283,18 @@ class CourseMenu(QMainWindow):
         course_to_add = Course(self.courseID_entry.text().strip(), self.course_credits_entry.text().strip(),
                                self.course_description_entry.text().strip(),
                                self.conn, self.curs)
-        # course_to_add.addCourse()
+        courseID_form, course_ID_exists = course_to_add.addCourse()
         # need to have database check for validity
-        # display confirmation screen
-        self.close_add_course()
+        if courseID_form == 0 and course_ID_exists == 0:
+            # confirmation window
+            self.close_add_course()
+            print('Successfully added course')
+        else:
+            if courseID_form == 1:
+                print('Invalid courseID form')
+            if course_ID_exists == 1:
+                print('CourseID already exists')
+
 
     def close_add_course(self):
         self.courseID_entry.hide()
@@ -303,7 +311,6 @@ class CourseMenu(QMainWindow):
         self.courseID_entry.show()
         self.get_course_info_button.show()
 
-
     def get_course_info(self):
         self.courseID_entry.close()
         self.get_course_info_button.close()
@@ -315,3 +322,6 @@ class CourseMenu(QMainWindow):
         self.courseID_entry.show()
         self.course_credits_entry.show()
         self.course_description_entry.show()
+
+    def edit_course_submit(self):
+        print()
