@@ -1,5 +1,5 @@
 import sqlite3
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QApplication, QLineEdit
+from PyQt5.QtWidgets import QMainWindow, QPushButton, QApplication, QLineEdit, QMessageBox
 
 from Course import Course
 from Student import Student
@@ -263,6 +263,19 @@ class CourseMenu(QMainWindow):
         self.get_course_info_button.hide()
         self.get_course_info_button.clicked.connect(self.get_course_info)
 
+        # pop up window
+        self.result_msg = QMessageBox(self)
+        self.result_msg.setWindowTitle('Add Course Results')
+        self.result_msg.resize(300, 300)
+        self.result_msg.move(400, 300)
+        self.result_msg.hide()
+
+
+    def msg_popup(self, msg: str, icon):
+        self.result_msg.setText(msg)
+        self.result_msg.setIcon(icon)
+        self.result_msg.show()
+
     def go_back(self):
         if self.add_course_open:
             self.close_add_course()
@@ -283,18 +296,22 @@ class CourseMenu(QMainWindow):
         course_to_add = Course(self.courseID_entry.text().strip(), self.course_credits_entry.text().strip(),
                                self.course_description_entry.text().strip(),
                                self.conn, self.curs)
-        courseID_form, course_ID_exists = course_to_add.addCourse()
+        courseID_form, course_ID_exists, valid_credit_value = course_to_add.addCourse()
         # need to have database check for validity
-        if courseID_form == 0 and course_ID_exists == 0:
+        if courseID_form == 0 and course_ID_exists == 0 and valid_credit_value is True:
             # confirmation window
+            self.msg_popup('Course Successfully Added to Database', QMessageBox.Information)
             self.close_add_course()
-            print('Successfully added course')
         else:
+            error_str = 'Errors Detected!'
             if courseID_form == 1:
-                print('Invalid courseID form')
+                error_str = error_str + '\n Invalid CourseID: Incorrect form'
             if course_ID_exists == 1:
-                print('CourseID already exists')
+                error_str = error_str + '\n Invalid CourseID: CourseID already exists'
+            if valid_credit_value is False:
+                error_str = error_str + '\n Invalid Credit Value: Must be digit'
 
+            self.msg_popup(error_str, QMessageBox.Warning)
 
     def close_add_course(self):
         self.courseID_entry.hide()

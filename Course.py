@@ -15,11 +15,11 @@ class Course:
 
     def addCourse(self):
         courseID_form, courseID_exists = self.valid_courseID()
-        if courseID_form == 0 and courseID_exists == 0:
+        if courseID_form == 0 and courseID_exists == 0 and self.Course_Credits.isdigit():
             self.curs.execute("""INSERT INTO Course (CourseID, Course_Credits, Course_Description)
                         VALUES (?,?,?)""", (self.Course_ID, self.Course_Credits, self.Course_Description))
             self.conn.commit()
-        return courseID_form, courseID_exists
+        return courseID_form, courseID_exists, self.Course_Credits.isdigit()
 
     def getCourse(self):
         print(self.Course_ID)
