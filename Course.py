@@ -53,21 +53,13 @@ class Course:
         return self.courseID_form, self.courseID_exists
 
     def editCourse(self):
-        global field_to_edit
-        valid_entry = None
-        while (valid_entry != True):
-            field_to_edit = input("1) Course Credits 2) Course Description")  # place holder until gui
-            if (field_to_edit == 1 or field_to_edit == 2):
-                valid_entry = True
-        if (field_to_edit == 1):  # edit Course_Credits
-            updated_credits = input('Enter credit amount: ')  # place holder until gui
-            sql_update_query = """Update Course set Coures_Credits = ? WHERE CourseID = ?"""
-            data = (updated_credits, self.Course_ID)
-            self.curs.execute(sql_update_query, data)
-            self.conn.commit()
-        elif (field_to_edit == 2):  # edit Course_Description
-            updated_description = input('Enter new Course Description: ')  # place holder until gui
-            sql_update_query = """Update Course set Coures_Description = ? WHERE CourseID = ?"""
-            data = (updated_description, self.Course_ID)
-            self.curs.execute(sql_update_query, data)
-            self.conn.commit()
+
+        sql_update_query = """Update Course set Course_Credits = ? WHERE CourseID = ?"""
+        data = (self.Course_Credits, self.Course_ID)
+        self.curs.execute(sql_update_query, data)
+        self.conn.commit()
+
+        sql_update_query = """Update Course set Course_Description = ? WHERE CourseID = ?"""
+        data = (self.Course_Description, self.Course_ID)
+        self.curs.execute(sql_update_query, data)
+        self.conn.commit()

@@ -263,6 +263,13 @@ class CourseMenu(QMainWindow):
         self.get_course_info_button.hide()
         self.get_course_info_button.clicked.connect(self.get_course_info)
 
+        self.edit_course_done = QPushButton(self)
+        self.edit_course_done.setText('Update Course')
+        self.edit_course_done.resize(150, 50)
+        self.edit_course_done.move(400, 500)
+        self.edit_course_done.hide()
+        self.edit_course_done.clicked.connect(self.edit_course_submit)
+
         # pop up window
         self.result_msg = QMessageBox(self)
         self.result_msg.setWindowTitle('Add Course Results')
@@ -332,13 +339,49 @@ class CourseMenu(QMainWindow):
         self.courseID_entry.close()
         self.get_course_info_button.close()
         temp_course = Course(self.courseID_entry.text().strip(), 0, 0, self.conn, self.curs)
-        course_to_edit = temp_course.getCourse()
-        self.courseID_entry.setText(course_to_edit[0])
-        self.course_credits_entry.setText(str(course_to_edit[1]))
-        self.course_description_entry.setText(course_to_edit[2])
-        self.courseID_entry.show()
-        self.course_credits_entry.show()
-        self.course_description_entry.show()
+        course_ID_form, course_ID_exists = temp_course.valid_courseID()
+        if course_ID_form == 0 and course_ID_exists == 1:
+            course_to_edit_info = temp_course.getCourse()
+            courseID = course_to_edit_info[0]
+            self.courseID_entry.setText(courseID)
+            credits = str(course_to_edit_info[1])
+            self.course_credits_entry.setText(credits)
+            description = course_to_edit_info[2]
+            self.course_description_entry.setText(description)
+            self.course_to_edit = Course(courseID, credits, description, self.conn, self.curs)
+            self.courseID_entry.show()
+            self.course_credits_entry.show()
+            self.course_description_entry.show()
+            self.edit_course_done.show()
+        else:
+            error_str = 'Errors Detected!'
+            if course_ID_exists == 0:
+                error_str = error_str + '\n Invalid CourseID: CourseID does not exist'
+            if course_ID_form == 1:
+                error_str = error_str + '\n Invalid CourseID: Incorrect form'
+            self.msg_popup(error_str, QMessageBox.Warning)
 
     def edit_course_submit(self):
-        print()
+        # make sure course credit value is valid entry
+        if self.course_credits_entry.text().strip().isdigit():
+            self.course_to_edit.Course_Credits = self.course_credits_entry.text().strip()
+            self.course_to_edit.Course_Description = self.course_description_entry.text().strip()
+            self.course_to_edit.editCourse()
+            # confirmation window
+            self.msg_popup('Course Successfully Updated In Database', QMessageBox.Information)
+            self.close_add_course()
+            self.close_edit_course()
+        else:
+            error_str = 'Errors Detected! \n Invalid Credit Value: Must be digit'
+            self.msg_popup(error_str, QMessageBox.Warning)
+
+    def close_edit_course(self):
+        self.courseID_entry.hide()
+        self.get_course_info_button.hide()
+        self.course_credits_entry.hide()
+        self.course_description_entry.hide()
+        self.edit_course_done.hide()
+        self.courseID_entry.setText('')
+        self.course_credits_entry.setText('')
+        self.course_description_entry.setText('')
+        self.edit_course_open = False
