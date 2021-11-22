@@ -2,6 +2,7 @@ import sqlite3
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QApplication, QLineEdit, QMessageBox
 
 from Course import Course
+from Section import Section
 from Student import Student
 
 
@@ -16,11 +17,13 @@ class MainWindow(QMainWindow):
         self.student_menu_button = QPushButton(self)
         self.faculty_menu_button = QPushButton(self)
         self.course_menu_button = QPushButton(self)
+        self.enrollment_menu_button = QPushButton(self)
 
         # sub menu
         self.student_menu = StudentMenu(self, self.conn, self.curs)
         self.faculty_menu = FacultyMenu(self)
         self.course_menu = CourseMenu(self, self.conn, self.curs)
+        self.enrollment_menu = EnrollmentMenu(self, self.conn, self.curs)
 
         self.setup_ui()  # needs to be at end of constructor
 
@@ -37,13 +40,18 @@ class MainWindow(QMainWindow):
 
         self.faculty_menu_button.setText("Faculty")
         self.faculty_menu_button.resize(150, 50)
-        self.faculty_menu_button.move(50, 300)
+        self.faculty_menu_button.move(50, 275)
         self.faculty_menu_button.clicked.connect(self.open_faculty_menu)
 
         self.course_menu_button.setText("Courses")
         self.course_menu_button.resize(150, 50)
-        self.course_menu_button.move(50, 400)
+        self.course_menu_button.move(50, 350)
         self.course_menu_button.clicked.connect(self.open_course_menu)
+
+        self.enrollment_menu_button.setText("Enrollment")
+        self.enrollment_menu_button.resize(150, 50)
+        self.enrollment_menu_button.move(50, 425)
+        self.enrollment_menu_button.clicked.connect(self.open_enrollment_menu)
 
     def open_student_menu(self):
         self.hide()
@@ -56,6 +64,10 @@ class MainWindow(QMainWindow):
     def open_course_menu(self):
         self.hide()
         self.course_menu.show()
+
+    def open_enrollment_menu(self):
+        self.hide()
+        self.enrollment_menu.show()
 
 
 class StudentMenu(QMainWindow):
@@ -211,7 +223,7 @@ class CourseMenu(QMainWindow):
         self.back_button = QPushButton(self)
         self.back_button.setText("Back")
         self.back_button.resize(150, 50)
-        self.back_button.move(50, 300)
+        self.back_button.move(50, 400)
         self.back_button.clicked.connect(self.go_back)
 
         # buttons for window
@@ -228,6 +240,20 @@ class CourseMenu(QMainWindow):
         self.edit_course_button.resize(150, 50)
         self.edit_course_button.move(50, 250)
         self.edit_course_button.clicked.connect(self.edit_course)
+
+        self.add_section_open = False
+        self.add_section_button = QPushButton(self)
+        self.add_section_button.setText('Add Section')
+        self.add_section_button.resize(150, 50)
+        self.add_section_button.move(50, 300)
+        self.add_section_button.clicked.connect(self.add_section)
+
+        self.remove_section_open = False
+        self.remove_section_button = QPushButton(self)
+        self.remove_section_button.setText('Remove Section')
+        self.remove_section_button.resize(150, 50)
+        self.remove_section_button.move(50, 350)
+        self.remove_section_button.clicked.connect(self.remove_section)
 
         # widgets for add_course
         self.courseID_entry = QLineEdit(self)
@@ -270,13 +296,41 @@ class CourseMenu(QMainWindow):
         self.edit_course_done.hide()
         self.edit_course_done.clicked.connect(self.edit_course_submit)
 
+        # widgets for add_section
+        self.sectionID_entry = QLineEdit(self)
+        self.sectionID_entry.setPlaceholderText('SectionID')
+        self.sectionID_entry.resize(280, 40)
+        self.sectionID_entry.move(400, 200)
+        self.sectionID_entry.hide()
+
+        self.instructorID_entry = QLineEdit(self)
+        self.instructorID_entry.setPlaceholderText('InstructorID')
+        self.instructorID_entry.resize(280, 40)
+        self.instructorID_entry.move(400, 250)
+        self.instructorID_entry.hide()
+
+        self.add_section_done = QPushButton(self)
+        self.add_section_done.setText('Add Section')
+        self.add_section_done.resize(150, 50)
+        self.add_section_done.move(400, 300)
+        self.add_section_done.hide()
+        self.add_section_done.clicked.connect(self.add_section_submit)
+
+        # widgets for remove_section
+        self.remove_section_done = QPushButton(self)
+        self.remove_section_done.setText('Remove Section')
+        self.remove_section_done.resize(150, 50)
+        self.remove_section_done.move(400, 300)
+        self.remove_section_done.hide()
+        self.remove_section_done.clicked.connect(self.remove_section_submit)
+
+
         # pop up window
         self.result_msg = QMessageBox(self)
         self.result_msg.setWindowTitle('Add Course Results')
         self.result_msg.resize(300, 300)
         self.result_msg.move(400, 300)
         self.result_msg.hide()
-
 
     def msg_popup(self, msg: str, icon):
         self.result_msg.setText(msg)
@@ -288,6 +342,10 @@ class CourseMenu(QMainWindow):
             self.close_add_course()
         elif self.edit_course_open:
             self.close_edit_course()
+        elif self.add_section_open:
+            self.close_add_section()
+        elif self.remove_section_open:
+            self.close_remove_section()
         else:
             self.previous_window.show()
             self.close()
@@ -385,3 +443,74 @@ class CourseMenu(QMainWindow):
         self.course_credits_entry.setText('')
         self.course_description_entry.setText('')
         self.edit_course_open = False
+
+    def add_section(self):
+        self.add_section_open = True
+        self.sectionID_entry.show()
+        self.instructorID_entry.show()
+        self.add_section_done.show()
+
+    def add_section_submit(self):
+        section_to_add = Section(self.sectionID_entry.text().strip(), self.instructorID_entry.text().strip(),
+                               self.conn, self.curs)
+        sectionID_form, sectionID_exists = section_to_add.addSection()
+        # need to have database check for validity
+        if sectionID_form == 0 and sectionID_exists == 0:
+            # confirmation window
+            self.msg_popup('Section Successfully Added to Database', QMessageBox.Information)
+            self.close_add_section()
+        else:
+            error_str = 'Errors Detected!'
+            if sectionID_form == 1:
+                error_str = error_str + '\n Invalid SectionID: Incorrect form'
+            if sectionID_exists == 1:
+                error_str = error_str + '\n Invalid SectionID: SectionID already exists'
+
+            self.msg_popup(error_str, QMessageBox.Warning)
+
+    def close_add_section(self):
+        self.sectionID_entry.hide()
+        self.instructorID_entry.hide()
+        self.add_section_done.hide()
+        self.sectionID_entry.setText('')
+        self.instructorID_entry.setText('')
+        self.add_section_open = False
+
+    def remove_section(self):
+        self.remove_section_open = True
+        self.sectionID_entry.show()
+        self.remove_section_done.show()
+
+    def remove_section_submit(self):
+        student_to_remove = Section(self.sectionID_entry.text().strip(), 0,
+                                    self.conn, self.curs)
+        # student_to_remove.removeStudent()
+        # check for validity
+        # display confirmation
+        self.close_remove_section()
+
+    def close_remove_section(self):
+        self.sectionID_entry.close()
+        self.remove_section_done.close()
+        self.sectionID_entry.setText('')
+        self.remove_section_open = False
+
+
+class EnrollmentMenu(QMainWindow):
+
+    def __init__(self, previous_window, conn: sqlite3.Connection, curs: sqlite3.Cursor):
+        self.previous_window = previous_window
+        super(EnrollmentMenu, self).__init__()
+        self.setWindowTitle('NorthStar Registration System/Enrollment')
+        self.setGeometry(400, 200, 1000, 750)
+        self.setFixedSize(1000, 750)
+
+        self.back_button = QPushButton(self)
+        self.back_button.setText("Back")
+        self.back_button.resize(150, 50)
+        self.back_button.move(50, 200)
+        self.back_button.clicked.connect(self.go_back)
+
+    def go_back(self):
+        self.previous_window.show()
+        self.hide()
