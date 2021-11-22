@@ -139,6 +139,18 @@ class StudentMenu(QMainWindow):
         self.remove_student_button.move(50, 250)
         self.remove_student_button.clicked.connect(self.remove_student)
 
+        # pop up window
+        self.result_msg = QMessageBox(self)
+        self.result_msg.setWindowTitle('Add Course Results')
+        self.result_msg.resize(300, 300)
+        self.result_msg.move(400, 300)
+        self.result_msg.hide()
+
+    def msg_popup(self, msg: str, icon):
+        self.result_msg.setText(msg)
+        self.result_msg.setIcon(icon)
+        self.result_msg.show()
+
     def go_back(self):
         if self.add_student_open:
             self.close_add_student()
@@ -157,8 +169,21 @@ class StudentMenu(QMainWindow):
     def add_student_submit(self):
         student_to_add = Student(self.studentID_entry.text().strip(), self.studentName_entry.text().strip(),
                                  self.conn, self.curs)
-        # student_to_add.addStudent()
+        studentID_form, studentID_exists = student_to_add.addStudent()
         # need to have database check for validity
+        if studentID_form == 0 and studentID_exists == 0:
+            # confirmation window
+            self.msg_popup('Student Successfully Added to Database', QMessageBox.Information)
+            self.close_add_student()
+        else:
+            error_str = 'Errors Detected!'
+            if studentID_form == 1:
+                error_str = error_str + '\n Invalid StudentID: Incorrect form'
+            if studentID_exists == 1:
+                error_str = error_str + '\n Invalid StudentID: StudentID already exists'
+
+            self.msg_popup(error_str, QMessageBox.Warning)
+
         # display confirmation screen
         self.close_add_student()
 
