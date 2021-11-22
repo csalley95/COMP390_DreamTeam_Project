@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
 
         # sub menu
         self.student_menu = StudentMenu(self, self.conn, self.curs)
-        self.faculty_menu = InstructorMenu(self)
+        self.faculty_menu = InstructorMenu(self, self.conn, self.curs)
         self.course_menu = CourseMenu(self, self.conn, self.curs)
         self.enrollment_menu = EnrollmentMenu(self, self.conn, self.curs)
 
@@ -203,10 +203,14 @@ class StudentMenu(QMainWindow):
     def remove_student_submit(self):
         student_to_remove = Student(self.studentID_entry.text().strip(), 0,
                                     self.conn, self.curs)
-        # student_to_remove.removeStudent()
+        student_to_remove.removeStudent()
         # check for validity
         # display confirmation
+        confirmation = 'Student removed from Database!'
+        self.msg_popup(confirmation, QMessageBox.Information)
         self.close_remove_student()
+
+        # add student doesnt exist error
 
     def close_remove_student(self):
         self.studentID_entry.close()
@@ -217,8 +221,10 @@ class StudentMenu(QMainWindow):
 
 class InstructorMenu(QMainWindow):
 
-    def __init__(self, previous_window):
+    def __init__(self, previous_window, conn: sqlite3.Connection, curs: sqlite3.Cursor):
         self.previous_window = previous_window
+        self.conn = conn
+        self.curs = curs
         super(InstructorMenu, self).__init__()
         self.setWindowTitle('NorthStar Registration System/Instructor')
         self.setGeometry(400, 200, 1000, 750)
@@ -301,6 +307,18 @@ class InstructorMenu(QMainWindow):
         self.add_instructor_to_section_done.hide()
         #self.add_instructor_to_section_done.clicked.connect(self.add_instructor_to_section_submit)
 
+        # pop up window
+        self.result_msg = QMessageBox(self)
+        self.result_msg.setWindowTitle('Add Course Results')
+        self.result_msg.resize(300, 300)
+        self.result_msg.move(400, 300)
+        self.result_msg.hide()
+
+    def msg_popup(self, msg: str, icon):
+        self.result_msg.setText(msg)
+        self.result_msg.setIcon(icon)
+        self.result_msg.show()
+
     def go_back(self):
         if self.add_instructor_open:
             self.close_add_instructor()
@@ -322,7 +340,7 @@ class InstructorMenu(QMainWindow):
         instructor_to_add = Instructor(self.instructorID_entry.text().strip(),
                                        self.instructor_Name_entry.text().strip(),
                                        self.conn, self.curs)
-        instructorID_form, instructorID_exists, valid_credit_value = instructor_to_add.addInstructor()
+        instructorID_form, instructorID_exists = instructor_to_add.addInstructor()
         # need to have database check for validity
         if instructorID_form == 0 and instructorID_exists == 0:
             # confirmation window
@@ -351,11 +369,13 @@ class InstructorMenu(QMainWindow):
         self.remove_instructor_done.show()
 
     def remove_instructor_submit(self):
-        instructor_to_remove = Instructor(self.sectionID_entry.text().strip(), 0,
+        instructor_to_remove = Instructor(self.instructorID_entry.text().strip(), 0,
                                           self.conn, self.curs)
-        # student_to_remove.removeStudent()
+        instructor_to_remove.removeInstructor()
         # check for validity
         # display confirmation
+        confirmation = 'Instructor removed from Database!'
+        self.msg_popup(confirmation, QMessageBox.Warning)
         self.close_remove_instructor()
 
     def close_remove_instructor(self):

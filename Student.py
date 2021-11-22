@@ -26,7 +26,7 @@ class Student:
                 self.studentID_form = 1
                 break
 
-        check_exists_query = """SELECT EXISTS(SELECT 1 FROM Student WHERE studentID = ?) """
+        check_exists_query = """SELECT EXISTS(SELECT 1 FROM Student WHERE studentID = ? )"""
         data = self.studentID,
         self.curs.execute(check_exists_query, data)
         # only commits if course doesnt already exist
@@ -37,6 +37,6 @@ class Student:
 
     def removeStudent(self):
         sql_update_query = """DELETE FROM Student WHERE studentID = ?"""
-        data = self.studentID
+        data = self.studentID,
         self.curs.execute(sql_update_query, data)
         self.conn.commit()
