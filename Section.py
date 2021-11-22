@@ -31,7 +31,7 @@ class Section:
             self.curs.execute("""INSERT INTO Section (sectionID, instructorName)
                                 VALUES (?,?)""", (self.sectionID, self.instructorName))
             self.conn.commit()
-        return sectionID_form, instructorName_exists
+        return sectionID_form  #,instructorName_exists
 
     def removeSection(self):
         sql_update_query = """DELETE FROM Section WHERE sectionID = ?"""
