@@ -2,6 +2,7 @@ import sqlite3
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QApplication, QLineEdit, QMessageBox
 
 from Course import Course
+from Instructor import Instructor
 from Section import Section
 from Student import Student
 
@@ -21,7 +22,7 @@ class MainWindow(QMainWindow):
 
         # sub menu
         self.student_menu = StudentMenu(self, self.conn, self.curs)
-        self.faculty_menu = FacultyMenu(self)
+        self.faculty_menu = InstructorMenu(self)
         self.course_menu = CourseMenu(self, self.conn, self.curs)
         self.enrollment_menu = EnrollmentMenu(self, self.conn, self.curs)
 
@@ -38,7 +39,7 @@ class MainWindow(QMainWindow):
         self.student_menu_button.move(50, 200)
         self.student_menu_button.clicked.connect(self.open_student_menu)
 
-        self.faculty_menu_button.setText("Faculty")
+        self.faculty_menu_button.setText("Instructors")
         self.faculty_menu_button.resize(150, 50)
         self.faculty_menu_button.move(50, 275)
         self.faculty_menu_button.clicked.connect(self.open_faculty_menu)
@@ -189,24 +190,172 @@ class StudentMenu(QMainWindow):
         self.remove_student_open = False
 
 
-class FacultyMenu(QMainWindow):
+class InstructorMenu(QMainWindow):
 
     def __init__(self, previous_window):
         self.previous_window = previous_window
-        super(FacultyMenu, self).__init__()
-        self.setWindowTitle('NorthStar Registration System/Faculty')
+        super(InstructorMenu, self).__init__()
+        self.setWindowTitle('NorthStar Registration System/Instructor')
         self.setGeometry(400, 200, 1000, 750)
         self.setFixedSize(1000, 750)
 
         self.back_button = QPushButton(self)
         self.back_button.setText("Back")
         self.back_button.resize(150, 50)
-        self.back_button.move(50, 200)
+        self.back_button.move(50, 400)
         self.back_button.clicked.connect(self.go_back)
 
+        # buttons for window
+        self.add_instructor_open = False
+        self.add_instructor_button = QPushButton(self)
+        self.add_instructor_button.setText('Add Instructor')
+        self.add_instructor_button.resize(150, 50)
+        self.add_instructor_button.move(50, 200)
+        self.add_instructor_button.clicked.connect(self.add_instructor)
+
+        self.remove_instructor_open = False
+        self.remove_instructor_button = QPushButton(self)
+        self.remove_instructor_button.setText('Remove Instructor')
+        self.remove_instructor_button.resize(150, 50)
+        self.remove_instructor_button.move(50, 250)
+        self.remove_instructor_button.clicked.connect(self.remove_instructor)
+
+        self.add_instructor_to_section_open = False
+        self.add_instructor_to_section_button = QPushButton(self)
+        self.add_instructor_to_section_button.setText('Add to Section')
+        self.add_instructor_to_section_button.resize(150, 50)
+        self.add_instructor_to_section_button.move(50, 300)
+        self.add_instructor_to_section_button.clicked.connect(self.add_instructor_to_section)
+
+        self.remove_instructor_from_section_open = False
+        self.remove_instructor_from_section_button = QPushButton(self)
+        self.remove_instructor_from_section_button.setText('Remove from Section')
+        self.remove_instructor_from_section_button.resize(150, 50)
+        self.remove_instructor_from_section_button.move(50, 350)
+        # self.remove_instructor_from_section_button.clicked.connect(self.remove_instructor_from_section)
+
+        # widgets for add_instructor
+        self.instructorID_entry = QLineEdit(self)
+        self.instructorID_entry.setPlaceholderText('Instructor ID')
+        self.instructorID_entry.resize(280, 40)
+        self.instructorID_entry.move(400, 200)
+        self.instructorID_entry.hide()
+
+        self.instructor_Name_entry = QLineEdit(self)
+        self.instructor_Name_entry.setPlaceholderText('Instructor Name')
+        self.instructor_Name_entry.resize(280, 40)
+        self.instructor_Name_entry.move(400, 250)
+        self.instructor_Name_entry.hide()
+
+        self.sectionID_entry = QLineEdit(self)
+        self.sectionID_entry.setPlaceholderText('Section ID')
+        self.sectionID_entry.resize(280, 40)
+        self.sectionID_entry.move(400, 250)
+        self.sectionID_entry.hide()
+
+        self.add_instructor_done = QPushButton(self)
+        self.add_instructor_done.setText('Add Instructor')
+        self.add_instructor_done.resize(150, 50)
+        self.add_instructor_done.move(400, 300)
+        self.add_instructor_done.hide()
+        self.add_instructor_done.clicked.connect(self.add_instructor_submit)
+
+        # widgets for remove_instructor
+        self.remove_instructor_done = QPushButton(self)
+        self.remove_instructor_done.setText('Remove Instructor')
+        self.remove_instructor_done.resize(150, 50)
+        self.remove_instructor_done.move(400, 250)
+        self.remove_instructor_done.hide()
+        self.remove_instructor_done.clicked.connect(self.remove_instructor_submit)
+
+        # widgets for add_instructor_to_section
+        self.add_instructor_to_section_done = QPushButton(self)
+        self.add_instructor_to_section_done.setText('Assign Instructor')
+        self.add_instructor_to_section_done.resize(150, 50)
+        self.add_instructor_to_section_done.move(400, 300)
+        self.add_instructor_to_section_done.hide()
+        #self.add_instructor_to_section_done.clicked.connect(self.add_instructor_to_section_submit)
+
     def go_back(self):
-        self.previous_window.show()
-        self.hide()
+        if self.add_instructor_open:
+            self.close_add_instructor()
+        elif self.remove_instructor_open:
+            self.close_remove_instructor()
+        elif self.add_instructor_to_section_open:
+            self.close_add_instructor_to_section()
+        else:
+            self.previous_window.show()
+            self.hide()
+
+    def add_instructor(self):
+        self.add_instructor_open = True
+        self.instructorID_entry.show()
+        self.instructor_Name_entry.show()
+        self.add_instructor_done.show()
+
+    def add_instructor_submit(self):
+        instructor_to_add = Instructor(self.instructorID_entry.text().strip(),
+                                       self.instructor_Name_entry.text().strip(),
+                                       self.conn, self.curs)
+        instructorID_form, instructorID_exists, valid_credit_value = instructor_to_add.addInstructor()
+        # need to have database check for validity
+        if instructorID_form == 0 and instructorID_exists == 0:
+            # confirmation window
+            self.msg_popup('Instructor Successfully Added to Database', QMessageBox.Information)
+            self.close_add_instructor()
+        else:
+            error_str = 'Errors Detected!'
+            if instructorID_form == 1:
+                error_str = error_str + '\n Invalid InstructorID: Incorrect form'
+            if instructorID_exists == 1:
+                error_str = error_str + '\n Invalid InstructorID: CourseID already exists'
+
+            self.msg_popup(error_str, QMessageBox.Warning)
+
+    def close_add_instructor(self):
+        self.instructorID_entry.hide()
+        self.instructor_Name_entry.hide()
+        self.add_instructor_done.hide()
+        self.instructorID_entry.setText('')
+        self.instructor_Name_entry.setText('')
+        self.add_instructor_open = False
+
+    def remove_instructor(self):
+        self.remove_instructor_open = True
+        self.instructorID_entry.show()
+        self.remove_instructor_done.show()
+
+    def remove_instructor_submit(self):
+        instructor_to_remove = Instructor(self.sectionID_entry.text().strip(), 0,
+                                          self.conn, self.curs)
+        # student_to_remove.removeStudent()
+        # check for validity
+        # display confirmation
+        self.close_remove_instructor()
+
+    def close_remove_instructor(self):
+        self.instructorID_entry.hide()
+        self.remove_instructor_done.hide()
+        self.instructorID_entry.setText('')
+        self.remove_instructor_open = False
+
+    def add_instructor_to_section(self):
+        self.add_instructor_to_section_open = True
+        self.instructorID_entry.show()
+        self.sectionID_entry.show()
+        self.add_instructor_to_section_done.show()
+
+    def add_instructor_to_section_submit(self):
+        # needs functionality
+        print()
+
+    def close_add_instructor_to_section(self):
+        self.instructorID_entry.hide()
+        self.sectionID_entry.hide()
+        self.add_instructor_to_section_done.hide()
+        self.instructorID_entry.setText('')
+        self.sectionID_entry.setText('')
+        self.add_instructor_to_section_open = False
 
 
 class CourseMenu(QMainWindow):
@@ -323,7 +472,6 @@ class CourseMenu(QMainWindow):
         self.remove_section_done.move(400, 300)
         self.remove_section_done.hide()
         self.remove_section_done.clicked.connect(self.remove_section_submit)
-
 
         # pop up window
         self.result_msg = QMessageBox(self)
@@ -452,7 +600,7 @@ class CourseMenu(QMainWindow):
 
     def add_section_submit(self):
         section_to_add = Section(self.sectionID_entry.text().strip(), self.instructorID_entry.text().strip(),
-                               self.conn, self.curs)
+                                 self.conn, self.curs)
         sectionID_form, sectionID_exists = section_to_add.addSection()
         # need to have database check for validity
         if sectionID_form == 0 and sectionID_exists == 0:
