@@ -1,5 +1,5 @@
 import sqlite3
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QApplication, QLineEdit, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QPushButton, QApplication, QLineEdit, QMessageBox, QRadioButton, QButtonGroup
 
 from Course import Course
 from Instructor import Instructor
@@ -141,7 +141,7 @@ class StudentMenu(QMainWindow):
 
         # pop up window
         self.result_msg = QMessageBox(self)
-        self.result_msg.setWindowTitle('Add Course Results')
+        self.result_msg.setWindowTitle('Results')
         self.result_msg.resize(300, 300)
         self.result_msg.move(400, 300)
         self.result_msg.hide()
@@ -278,11 +278,11 @@ class InstructorMenu(QMainWindow):
         self.instructor_Name_entry.move(400, 250)
         self.instructor_Name_entry.hide()
 
-        self.sectionID_entry = QLineEdit(self)
-        self.sectionID_entry.setPlaceholderText('Section ID')
-        self.sectionID_entry.resize(280, 40)
-        self.sectionID_entry.move(400, 250)
-        self.sectionID_entry.hide()
+        self.sectionNumber_entry = QLineEdit(self)
+        self.sectionNumber_entry.setPlaceholderText('Section ID')
+        self.sectionNumber_entry.resize(280, 40)
+        self.sectionNumber_entry.move(400, 250)
+        self.sectionNumber_entry.hide()
 
         self.add_instructor_done = QPushButton(self)
         self.add_instructor_done.setText('Add Instructor')
@@ -305,11 +305,11 @@ class InstructorMenu(QMainWindow):
         self.add_instructor_to_section_done.resize(150, 50)
         self.add_instructor_to_section_done.move(400, 300)
         self.add_instructor_to_section_done.hide()
-        #self.add_instructor_to_section_done.clicked.connect(self.add_instructor_to_section_submit)
+        # self.add_instructor_to_section_done.clicked.connect(self.add_instructor_to_section_submit)
 
         # pop up window
         self.result_msg = QMessageBox(self)
-        self.result_msg.setWindowTitle('Add Course Results')
+        self.result_msg.setWindowTitle('Results')
         self.result_msg.resize(300, 300)
         self.result_msg.move(400, 300)
         self.result_msg.hide()
@@ -387,7 +387,7 @@ class InstructorMenu(QMainWindow):
     def add_instructor_to_section(self):
         self.add_instructor_to_section_open = True
         self.instructorID_entry.show()
-        self.sectionID_entry.show()
+        self.sectionNumber_entry.show()
         self.add_instructor_to_section_done.show()
 
     def add_instructor_to_section_submit(self):
@@ -396,10 +396,10 @@ class InstructorMenu(QMainWindow):
 
     def close_add_instructor_to_section(self):
         self.instructorID_entry.hide()
-        self.sectionID_entry.hide()
+        self.sectionNumber_entry.hide()
         self.add_instructor_to_section_done.hide()
         self.instructorID_entry.setText('')
-        self.sectionID_entry.setText('')
+        self.sectionNumber_entry.setText('')
         self.add_instructor_to_section_open = False
 
 
@@ -491,22 +491,49 @@ class CourseMenu(QMainWindow):
         self.edit_course_done.clicked.connect(self.edit_course_submit)
 
         # widgets for add_section
-        self.sectionID_entry = QLineEdit(self)
-        self.sectionID_entry.setPlaceholderText('SectionID')
-        self.sectionID_entry.resize(280, 40)
-        self.sectionID_entry.move(400, 200)
-        self.sectionID_entry.hide()
+        self.courseID_entry = QLineEdit(self)
+        self.courseID_entry.setPlaceholderText('Course ID')
+        self.courseID_entry.resize(280, 40)
+        self.courseID_entry.move(400, 200)
+        self.courseID_entry.hide()
+
+        self.sectionNumber_entry = QLineEdit(self)
+        self.sectionNumber_entry.setPlaceholderText('Section Number')
+        self.sectionNumber_entry.resize(280, 40)
+        self.sectionNumber_entry.move(400, 250)
+        self.sectionNumber_entry.hide()
+
+        self.assign_instructor_yes = QRadioButton(self)
+        self.assign_instructor_yes.setText('Yes')
+        self.assign_instructor_yes.move(350, 295)
+        self.assign_instructor_yes.hide()
+
+        self.assign_instructor_no = QRadioButton(self)
+        self.assign_instructor_no.setText('No')
+        self.assign_instructor_no.move(350, 310)
+        self.assign_instructor_no.setChecked(True)
+        self.assign_instructor_no.hide()
+
+        self.assign_instructor_group = QButtonGroup(self)
+        self.assign_instructor_group.addButton(self.assign_instructor_yes)
+        self.assign_instructor_group.addButton(self.assign_instructor_no)
 
         self.instructorID_entry = QLineEdit(self)
-        self.instructorID_entry.setPlaceholderText('InstructorID')
+        self.instructorID_entry.setPlaceholderText('Instructor ID')
         self.instructorID_entry.resize(280, 40)
-        self.instructorID_entry.move(400, 250)
+        self.instructorID_entry.move(400, 300)
         self.instructorID_entry.hide()
+
+        self.sectionCapacity_entry = QLineEdit(self)
+        self.sectionCapacity_entry.setPlaceholderText('Course Capacity')
+        self.sectionCapacity_entry.resize(280, 40)
+        self.sectionCapacity_entry.move(400, 350)
+        self.sectionCapacity_entry.hide()
 
         self.add_section_done = QPushButton(self)
         self.add_section_done.setText('Add Section')
         self.add_section_done.resize(150, 50)
-        self.add_section_done.move(400, 300)
+        self.add_section_done.move(400, 400)
         self.add_section_done.hide()
         self.add_section_done.clicked.connect(self.add_section_submit)
 
@@ -520,7 +547,7 @@ class CourseMenu(QMainWindow):
 
         # pop up window
         self.result_msg = QMessageBox(self)
-        self.result_msg.setWindowTitle('Add Course Results')
+        self.result_msg.setWindowTitle('Results')
         self.result_msg.resize(300, 300)
         self.result_msg.move(400, 300)
         self.result_msg.hide()
@@ -639,43 +666,67 @@ class CourseMenu(QMainWindow):
 
     def add_section(self):
         self.add_section_open = True
-        self.sectionID_entry.show()
-        self.instructorID_entry.show()
+        self.courseID_entry.show()
+        self.sectionNumber_entry.show()
         self.add_section_done.show()
+        self.instructorID_entry.show()
+        self.assign_instructor_yes.show()
+        self.assign_instructor_no.show()
+        self.sectionCapacity_entry.show()
 
     def add_section_submit(self):
-        section_to_add = Section(self.sectionID_entry.text().strip(), self.instructorID_entry.text().strip(),
-                                 self.conn, self.curs)
-        sectionID_form, sectionID_exists = section_to_add.addSection()
+        if self.assign_instructor_yes.isChecked():
+            section_to_add = Section(self.courseID_entry.text().strip(), self.sectionNumber_entry.text().strip(),
+                                     self.instructorID_entry.text().strip(), self.sectionCapacity_entry.text().strip(),
+                                     self.conn, self.curs)
+        else:
+            section_to_add = Section(self.courseID_entry.text().strip(), self.sectionNumber_entry.text().strip(),
+                                     'N/A', self.sectionCapacity_entry.text().strip(),
+                                     self.conn, self.curs)
+
+        courseID_exists, sectionID_form, sectionID_exists, instructorID_exists, section_capacity_form = section_to_add.addSection()
         # need to have database check for validity
-        if sectionID_form == 0 and sectionID_exists == 0:
+        if courseID_exists == 1 and sectionID_form == 0 and sectionID_exists == 0 and instructorID_exists == 1\
+                and section_capacity_form == 0:
             # confirmation window
             self.msg_popup('Section Successfully Added to Database', QMessageBox.Information)
             self.close_add_section()
         else:
             error_str = 'Errors Detected!'
+            if courseID_exists == 0:
+                error_str = f'{error_str} \n Invalid Course ID: Course ID does not exist'
             if sectionID_form == 1:
-                error_str = error_str + '\n Invalid SectionID: Incorrect form'
+                error_str = f'{error_str} \n Invalid Section Number: Incorrect form'
             if sectionID_exists == 1:
-                error_str = error_str + '\n Invalid SectionID: SectionID already exists'
+                error_str = f'{error_str} \n Invalid Section Number: Section Number already exists'
+            if instructorID_exists == 0:
+                error_str = f'{error_str} \n Invalid Instructor ID: Instructor ID does not exist '
+            if section_capacity_form == 1:
+                error_str = f'{error_str} \n Invalid Section Capacity: Section Capacity must be a number greater than 0'
 
             self.msg_popup(error_str, QMessageBox.Warning)
 
     def close_add_section(self):
-        self.sectionID_entry.hide()
+        self.sectionNumber_entry.hide()
         self.instructorID_entry.hide()
+        self.courseID_entry.hide()
         self.add_section_done.hide()
-        self.sectionID_entry.setText('')
+        self.assign_instructor_yes.hide()
+        self.assign_instructor_no.hide()
+        self.sectionCapacity_entry.hide()
+        self.courseID_entry.setText('')
+        self.sectionNumber_entry.setText('')
         self.instructorID_entry.setText('')
+        self.sectionCapacity_entry.setText('')
         self.add_section_open = False
 
     def remove_section(self):
         self.remove_section_open = True
-        self.sectionID_entry.show()
+        self.sectionNumber_entry.show()
         self.remove_section_done.show()
 
     def remove_section_submit(self):
-        student_to_remove = Section(self.sectionID_entry.text().strip(), 0,
+        student_to_remove = Section(self.sectionNumber_entry.text().strip(), 0,
                                     self.conn, self.curs)
         # student_to_remove.removeStudent()
         # check for validity
@@ -683,9 +734,9 @@ class CourseMenu(QMainWindow):
         self.close_remove_section()
 
     def close_remove_section(self):
-        self.sectionID_entry.close()
+        self.sectionNumber_entry.close()
         self.remove_section_done.close()
-        self.sectionID_entry.setText('')
+        self.sectionNumber_entry.setText('')
         self.remove_section_open = False
 
 

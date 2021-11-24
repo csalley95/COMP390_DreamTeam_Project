@@ -10,7 +10,6 @@ class Enrollment:
         self.curs = curs
 
 
-
     def addStudentToSection(self):
         #check through the individual foreign tables for values
         CHECK_studentID = self.curs.execute("""SELECT studentID FROM Student WHERE studentID = ? """), (self.studentID)
