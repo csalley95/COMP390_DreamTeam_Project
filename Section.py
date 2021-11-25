@@ -13,21 +13,43 @@ class Section:
 
         self.CourseSectionID = f"{CourseID}-{SectionNumber}"
 
-    def addInstructorToSection(self):
-        CHECK_instructorID = self.curs.execute("""SELECT instructorID FROM instructor WHERE instructorID = ? """), (
-            self.instructorID)
-        CHECK_sectionID = self.curs.execute("""SELECT sectionID FROM Section WHERE sectionID = ? """), (self.sectionID)
+    def addInstructorToSection(self, courseSectionID, instructorID):
+        self.courseSection_exists = 0
+        self.instructorID_exists = 0
 
-        if (CHECK_instructorID != False) and (CHECK_sectionID != False):
-            self.curs.execute("""INSERT INTO Section (instructorID, sectionID)
-                                                             VALUES (?,?,?)""", (self.studentID, self.sectionID))
+        check_exists_query = """SELECT EXISTS(SELECT 1 FROM Course_Section WHERE CourseSectionID = ?)"""
+        data = courseSectionID,
+        self.curs.execute(check_exists_query, data)
+        if self.curs.fetchone()[0] == 1:
+            self.courseSection_exists = 1
+
+        check_exists_query = """SELECT EXISTS(SELECT 1 FROM Instructor WHERE InstructorID = ?)"""
+        data = instructorID,
+        self.curs.execute(check_exists_query, data)
+        if self.curs.fetchone()[0] == 1:
+            self.instructorID_exists = 1
+
+        if self.courseSection_exists == 1 and self.instructorID_exists == 1:
+            sql_update_query = """Update Course_Section set InstructorID = ? WHERE CourseSectionID = ?"""
+            data = (instructorID, courseSectionID)
+            self.curs.execute(sql_update_query, data)
             self.conn.commit()
 
-    def removeInstructorFromSection(self):
+        return self.courseSection_exists, self.instructorID_exists
 
-        self.curs.execute("""DELETE FROM Section WHERE instructorID = ?, sectionID = ? """), \
-        (self.insturctorID, self.sectionID)
-        self.conn.commit()
+    def removeInstructorFromSection(self, courseSectionID, instructorID):
+
+        check_exists_query = """SELECT EXISTS(SELECT 1 FROM Course_Section WHERE CourseSectionID = ? and InstructorID = ?)"""
+        data = courseSectionID, instructorID
+        self.curs.execute(check_exists_query, data)
+        if self.curs.fetchone()[0] == 1:
+            sql_update_query = """Update Course_Section set InstructorID = ? WHERE CourseSectionID = ?"""
+            data = ('N/A', courseSectionID)
+            self.curs.execute(sql_update_query, data)
+            self.conn.commit()
+            return 1
+        else:
+            return 0
 
     def addSection(self):
         courseID_exists, sectionID_form, sectionID_exists, instructorID_exists, section_capacity_form \
@@ -39,11 +61,18 @@ class Section:
             self.conn.commit()
         return courseID_exists, sectionID_form, sectionID_exists, instructorID_exists, section_capacity_form
 
-    def removeSection(self):
-        sql_update_query = """DELETE FROM Section WHERE sectionID = ?"""
-        data = self.CourseSectionID,
-        self.curs.execute(sql_update_query, data)
-        self.conn.commit()
+    def removeSection(self, CourseSectionID):
+        check_exists_query = """SELECT EXISTS(SELECT 1 FROM Course_Section WHERE CourseSectionID = ?) """
+        data = CourseSectionID,
+        self.curs.execute(check_exists_query, data)
+        if self.curs.fetchone()[0] == 1:
+            sql_update_query = """DELETE FROM Course_Section WHERE CourseSectionID = ?"""
+            data = CourseSectionID,
+            self.curs.execute(sql_update_query, data)
+            self.conn.commit()
+            return 1
+        else:
+            return 0
 
     def valid_section(self):
         self.sectionID_exists = 0

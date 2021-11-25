@@ -263,7 +263,7 @@ class InstructorMenu(QMainWindow):
         self.remove_instructor_from_section_button.setText('Remove from Section')
         self.remove_instructor_from_section_button.resize(150, 50)
         self.remove_instructor_from_section_button.move(50, 350)
-        # self.remove_instructor_from_section_button.clicked.connect(self.remove_instructor_from_section)
+        self.remove_instructor_from_section_button.clicked.connect(self.remove_instructor_from_section)
 
         # widgets for add_instructor
         self.instructorID_entry = QLineEdit(self)
@@ -278,11 +278,11 @@ class InstructorMenu(QMainWindow):
         self.instructor_Name_entry.move(400, 250)
         self.instructor_Name_entry.hide()
 
-        self.sectionNumber_entry = QLineEdit(self)
-        self.sectionNumber_entry.setPlaceholderText('Section ID')
-        self.sectionNumber_entry.resize(280, 40)
-        self.sectionNumber_entry.move(400, 250)
-        self.sectionNumber_entry.hide()
+        self.courseSectionID_entry = QLineEdit(self)
+        self.courseSectionID_entry.setPlaceholderText('Course Section ID')
+        self.courseSectionID_entry.resize(280, 40)
+        self.courseSectionID_entry.move(400, 250)
+        self.courseSectionID_entry.hide()
 
         self.add_instructor_done = QPushButton(self)
         self.add_instructor_done.setText('Add Instructor')
@@ -305,7 +305,15 @@ class InstructorMenu(QMainWindow):
         self.add_instructor_to_section_done.resize(150, 50)
         self.add_instructor_to_section_done.move(400, 300)
         self.add_instructor_to_section_done.hide()
-        # self.add_instructor_to_section_done.clicked.connect(self.add_instructor_to_section_submit)
+        self.add_instructor_to_section_done.clicked.connect(self.add_instructor_to_section_submit)
+
+        # widgets for remove_instructor_from_section
+        self.remove_instructor_from_section_done = QPushButton(self)
+        self.remove_instructor_from_section_done.setText('Remove Instructor')
+        self.remove_instructor_from_section_done.resize(150, 50)
+        self.remove_instructor_from_section_done.move(400, 300)
+        self.remove_instructor_from_section_done.hide()
+        self.remove_instructor_from_section_done.clicked.connect(self.remove_instructor_from_section_submit)
 
         # pop up window
         self.result_msg = QMessageBox(self)
@@ -326,6 +334,8 @@ class InstructorMenu(QMainWindow):
             self.close_remove_instructor()
         elif self.add_instructor_to_section_open:
             self.close_add_instructor_to_section()
+        elif self.remove_instructor_from_section_open:
+            self.close_remove_instructor_from_section()
         else:
             self.previous_window.show()
             self.hide()
@@ -387,20 +397,59 @@ class InstructorMenu(QMainWindow):
     def add_instructor_to_section(self):
         self.add_instructor_to_section_open = True
         self.instructorID_entry.show()
-        self.sectionNumber_entry.show()
+        self.courseSectionID_entry.show()
         self.add_instructor_to_section_done.show()
 
     def add_instructor_to_section_submit(self):
-        # needs functionality
-        print()
+        temp_section = Section(0, 0, 0, 0, self.conn, self.curs)
+        courseSection_exists, instructor_exists = temp_section.\
+            addInstructorToSection(self.courseSectionID_entry.text().strip(), self.instructorID_entry.text().strip())
+
+        if courseSection_exists == 1 and instructor_exists == 1:
+            self.msg_popup('Instructor added to Section', QMessageBox.Information)
+            self.close_add_instructor_to_section()
+        else:
+            error_str = 'Errors Detected!'
+            if courseSection_exists != 1:
+                error_str = f'{error_str} \n Invalid Course Section ID: Course Section ID does not exist'
+            if instructor_exists != 1:
+                error_str = f'{error_str} \n Invalid Instructor ID: Instructor ID does not exist'
+            self.msg_popup(error_str, QMessageBox.Warning)
 
     def close_add_instructor_to_section(self):
         self.instructorID_entry.hide()
-        self.sectionNumber_entry.hide()
+        self.courseSectionID_entry.hide()
         self.add_instructor_to_section_done.hide()
         self.instructorID_entry.setText('')
-        self.sectionNumber_entry.setText('')
+        self.courseSectionID_entry.setText('')
         self.add_instructor_to_section_open = False
+
+    def remove_instructor_from_section(self):
+        self.remove_instructor_from_section_open = True
+        self.instructorID_entry.show()
+        self.courseSectionID_entry.show()
+        self.remove_instructor_from_section_done.show()
+
+    def remove_instructor_from_section_submit(self):
+        temp_section = Section(0, 0, 0, 0, self.conn, self.curs)
+        courseSection_exists = temp_section. \
+           removeInstructorFromSection(self.courseSectionID_entry.text().strip(), self.instructorID_entry.text().strip())
+        if courseSection_exists == 1:
+            self.msg_popup('Instructor removed from Section', QMessageBox.Information)
+            self.close_add_instructor_from_section()
+        else:
+            error_str = 'Errors Detected!'
+            if courseSection_exists != 1:
+                error_str = f'{error_str} \n Invalid Course Section ID: Course Section ID does not exist'
+            self.msg_popup(error_str, QMessageBox.Warning)
+
+    def close_remove_instructor_from_section(self):
+        self.instructorID_entry.hide()
+        self.courseSectionID_entry.hide()
+        self.remove_instructor_from_section_done.hide()
+        self.instructorID_entry.setText('')
+        self.courseSectionID_entry.setText('')
+        self.remove_instructor_from_section_open = False
 
 
 class CourseMenu(QMainWindow):
@@ -538,6 +587,12 @@ class CourseMenu(QMainWindow):
         self.add_section_done.clicked.connect(self.add_section_submit)
 
         # widgets for remove_section
+        self.courseSectionID_entry = QLineEdit(self)
+        self.courseSectionID_entry.setPlaceholderText('Course Section ID')
+        self.courseSectionID_entry.resize(280, 40)
+        self.courseSectionID_entry.move(400, 200)
+        self.courseSectionID_entry.hide()
+
         self.remove_section_done = QPushButton(self)
         self.remove_section_done.setText('Remove Section')
         self.remove_section_done.resize(150, 50)
@@ -722,21 +777,23 @@ class CourseMenu(QMainWindow):
 
     def remove_section(self):
         self.remove_section_open = True
-        self.sectionNumber_entry.show()
+        self.courseSectionID_entry.show()
         self.remove_section_done.show()
 
     def remove_section_submit(self):
-        student_to_remove = Section(self.sectionNumber_entry.text().strip(), 0,
-                                    self.conn, self.curs)
-        # student_to_remove.removeStudent()
+        section_to_remove = Section(0, 0, 0, 0, self.conn, self.curs)
         # check for validity
-        # display confirmation
-        self.close_remove_section()
+        section_deleted = section_to_remove.removeSection(self.courseSectionID_entry.text().strip())
+        if section_deleted == 1:
+            self.msg_popup('Section removed from Database', QMessageBox.Information)
+            self.close_remove_section()
+        else:
+            self.msg_popup('Invalid Section ID: Section ID does not exist', QMessageBox.Warning)
 
     def close_remove_section(self):
-        self.sectionNumber_entry.close()
+        self.couseSectionID_entry.close()
         self.remove_section_done.close()
-        self.sectionNumber_entry.setText('')
+        self.courseSectionID_entry.setText('')
         self.remove_section_open = False
 
 
