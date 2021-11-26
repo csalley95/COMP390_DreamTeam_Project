@@ -1,5 +1,6 @@
 import sqlite3
-from PyQt5.QtWidgets import QMainWindow, QPushButton, QApplication, QLineEdit, QMessageBox, QRadioButton, QButtonGroup
+from PyQt5.QtWidgets import QMainWindow, QPushButton, QApplication, QLineEdit, QMessageBox, QRadioButton, QButtonGroup, \
+    QTableWidget
 
 from Course import Course
 from Instructor import Instructor
@@ -823,7 +824,21 @@ class EnrollmentMenu(QMainWindow):
         self.add_student_section_button.move(50, 200)
         self.add_student_section_button.clicked.connect(self.add_student_section)
 
-        # widgets for add_enrollment
+        self.remove_student_section_open = False
+        self.remove_student_section_button = QPushButton(self)
+        self.remove_student_section_button.setText('Remove Enrollment')
+        self.remove_student_section_button.resize(150, 50)
+        self.remove_student_section_button.move(50, 250)
+        self.remove_student_section_button.clicked.connect(self.remove_student_section)
+
+        self.remove_flag_open = False
+        self.remove_flag_button = QPushButton(self)
+        self.remove_flag_button.setText('Remove Flag')
+        self.remove_flag_button.resize(150, 50)
+        self.remove_flag_button.move(50, 300)
+        self.remove_flag_button.clicked.connect(self.remove_flag)
+
+        # widgets for add_student_section
         self.studentID_entry = QLineEdit(self)
         self.studentID_entry.setPlaceholderText('StudentID')
         self.studentID_entry.move(400, 200)
@@ -849,6 +864,29 @@ class EnrollmentMenu(QMainWindow):
         self.add_student_section_done.clicked.connect(self.add_student_section_submit)
         self.add_student_section_done.hide()
 
+        # widgets for remove_student_section
+        self.remove_student_section_done = QPushButton(self)
+        self.remove_student_section_done.setText('Delete Enrollment')
+        self.remove_student_section_done.move(400, 350)
+        self.remove_student_section_done.resize(150, 50)
+        self.remove_student_section_done.clicked.connect(self.remove_student_section_submit)
+        self.remove_student_section_done.hide()
+
+        # widgets for remove_flag
+        self.flag_lookup = QPushButton(self)
+        self.flag_lookup.setText('Look Up')
+        self.flag_lookup.move(700, 200)
+        self.flag_lookup.resize(150, 50)
+        self.flag_lookup.clicked.connect(self.student_flag_lookup)
+        self.flag_lookup.hide()
+
+        self.remove_flag_done = QPushButton(self)
+        self.remove_flag_done.setText('Delete Flag')
+        self.remove_flag_done.move(400, 400)
+        self.remove_flag_done.resize(150, 50)
+        self.remove_flag_done.clicked.connect(self.remove_flag_submit)
+        self.remove_flag_done.hide()
+
         # pop up window
         self.result_msg = QMessageBox(self)
         self.result_msg.setWindowTitle('Results')
@@ -864,6 +902,10 @@ class EnrollmentMenu(QMainWindow):
     def go_back(self):
         if self.add_student_section_open:
             self.close_add_student_section()
+        elif self.remove_student_section_open:
+            self.close_remove_student_section()
+        elif self.remove_flag_open:
+            self.close_remove_flag()
         else:
             self.previous_window.show()
             self.hide()
@@ -888,6 +930,13 @@ class EnrollmentMenu(QMainWindow):
                 msg = f'{msg} \n \t Flag: Section over Capacity!'
             self.msg_popup(msg, QMessageBox.Information)
             self.close_add_student_section()
+        else:
+            error_msg = 'Errors Detected!'
+            if studentID_exists == 0:
+                error_msg = f'{error_msg} \n Invalid Student ID: Student ID does not exist'
+            if sectionID_exists == 0:
+                error_msg = f'{error_msg} \n Invalid Section: Section with Section ID and Course ID does not exist'
+            self.msg_popup(error_msg, QMessageBox.Warning)
 
     def close_add_student_section(self):
         self.studentID_entry.hide()
@@ -898,3 +947,74 @@ class EnrollmentMenu(QMainWindow):
         self.courseID_entry.setText('')
         self.sectionNumber_entry.setText('')
         self.add_student_section_open = False
+
+    def remove_student_section(self):
+        self.remove_student_section_open = True
+        self.studentID_entry.show()
+        self.courseID_entry.show()
+        self.sectionNumber_entry.show()
+        self.remove_student_section_done.show()
+
+    def remove_student_section_submit(self):
+        enrollment_to_remove = Enrollment(self.studentID_entry.text().strip(), self.courseID_entry.text().strip(),
+                                          self.sectionNumber_entry.text().strip(), self.conn, self.curs)
+        studentID_exists, sectionID_exists = enrollment_to_remove.removeStudentFromSection()
+
+        if studentID_exists == 1 and sectionID_exists == 1:
+            msg = 'Enrollment successfully Removed!'
+            self.msg_popup(msg, QMessageBox.Information)
+            self.close_remove_student_section()
+
+        else:
+            error_msg = 'Errors Detected!'
+            if studentID_exists == 0:
+                error_msg = f'{error_msg} \n Invalid Student ID: Student ID does not exist'
+            if sectionID_exists == 0:
+                error_msg = f'{error_msg} \n Invalid Section: Section with Section ID and Course ID does not exist'
+            self.msg_popup(error_msg, QMessageBox.Warning)
+
+    def close_remove_student_section(self):
+        self.studentID_entry.hide()
+        self.courseID_entry.hide()
+        self.sectionNumber_entry.hide()
+        self.remove_student_section_done.hide()
+        self.studentID_entry.setText('')
+        self.courseID_entry.setText('')
+        self.sectionNumber_entry.setText('')
+        self.remove_student_section_open = False
+
+    def remove_flag(self):
+        self.remove_flag_open = True
+        self.studentID_entry.show()
+        self.flag_lookup.show()
+
+    def student_flag_lookup(self):
+        find_flags_query = """SELECT CouseID, SectionID, Over_Credit_Flag, Over_Capacity_Flag FROM Enrollment WHERE StudentID = ?"""
+        data = self.studentID_entry.text().strip(),
+        self.curs.execute(find_flags_query, data)
+        flags_found = self.curs.fetchall()
+
+        flag_list = []
+        # categorizing flags
+        for i in flags_found:
+            if i[2] == 1:
+                flag_list.append([i[i][0], i[i][1], 'Credit Limit Exceeded'])
+            if i[3] == 1:
+                flag_list.append([i[i][0], i[i][1], 'Section Capacity Exceeded'])
+
+        self.flag_table = QTableWidget(3, len(flag_list))
+        for i in flag_list:
+            self.flag_table.insertRow(i)
+
+        self.flag_table.show()
+
+
+
+
+
+
+    def remove_flag_submit(self):
+        enrollment_to_edit = Enrollment(self.studentID_entry.text().strip(), 0,
+                                        0, self.conn, self.curs)
+
+

@@ -36,7 +36,7 @@ class Student:
         return self.studentID_form, self.studentID_exists
 
     def removeStudent(self):
-        sql_update_query = """DELETE FROM Student WHERE studentID = ?"""
+        sql_delete_query = """DELETE FROM Student WHERE studentID = ?"""
         data = self.studentID,
-        self.curs.execute(sql_update_query, data)
+        self.curs.execute(sql_delete_query, data)
         self.conn.commit()
