@@ -1,37 +1,83 @@
 import sqlite3 as sql
 class Enrollment:
 
-    def __init__(self, enrollmentID, studentID, sectionID, courseID, conn: sql.Connection, curs: sql.Cursor):
-        self.enrollmentID = enrollmentID
-        self.studentID = studentID
-        self.sectionID = sectionID
-        self.courseID = courseID
+    def __init__(self, StudentID, CourseID, SectionID, conn: sql.Connection, curs: sql.Cursor):
+        self.Over_Capacity = 0
+        self.Over_Credits = 0
+        self.StudentID = StudentID
+        self.CourseID = CourseID
+        self.SectionID = SectionID
+        self.CourseSectionID = f'{self.CourseID}-{self.SectionID}'
         self.conn = conn
         self.curs = curs
 
-
     def addStudentToSection(self):
-        #check through the individual foreign tables for values
-        CHECK_studentID = self.curs.execute("""SELECT studentID FROM Student WHERE studentID = ? """), (self.studentID)
-        CHECK_sectionID = self.curs.execute("""SELECT sectionID FROM Section WHERE sectionID = ? """), (self.sectionID)
-        CHECK_courseID = self.curs.execute("""SELECT courseID FROM Course WHERE courseID = ? """), (self.courseID)
+        # check for valid studentID and sectionID
+        self.studentID_exists = 0
+        self.sectionID_exists = 0
 
-        #if they exist add the entries to enrollment  table
-        if (CHECK_studentID != False) and (CHECK_sectionID != False) and (CHECK_courseID != False):
-            self.curs.execute("""INSERT INTO Enrollment (studentID, sectionID, courseID)
-                                                             VALUES (?,?,?)""", (self.studentID, self.sectionID, self.courseID))
+        check_exists_query = """SELECT EXISTS(SELECT 1 FROM Course_Section WHERE CourseSectionID = ?)"""
+        data = self.CourseSectionID,
+        self.curs.execute(check_exists_query, data)
+        if self.curs.fetchone()[0] == 1:
+            self.sectionID_exists = 1
+
+        check_exists_query = """SELECT EXISTS(SELECT 1 FROM Student WHERE StudentID = ?)"""
+        data = self.StudentID,
+        self.curs.execute(check_exists_query, data)
+        if self.curs.fetchone()[0] == 1:
+            self.studentID_exists = 1
+
+        if self.studentID_exists == 1 and self.sectionID_exists == 1:
+            self.addFlag()
+
+            self.curs.execute("""INSERT INTO Enrollment (CouseID, SectionID, StudentID, Over_Credit_Flag, Over_Capacity_Flag)
+                                                    VALUES (?,?,?,?,?)""", (self.CourseID, self.SectionID, self.StudentID, self.Over_Credits, self.Over_Capacity))
             self.conn.commit()
 
-
-    def removeStudentFromSection(self):
-
-        self.curs.execute("""DELETE FROM Enrollment WHERE studentID = ?, sectionID = ? , courseID = ? """),\
-                                                                         (self.studentID, self.sectionID, self.courseID)
-
-        self.conn.commit()
+        return self.studentID_exists, self.sectionID_exists, self.Over_Credits, self.Over_Capacity
 
 
-    #def addFlag(self):
+    #def removeStudentFromSection(self):
+
+
+    def addFlag(self):
+        credit_limit = 18
+        enrolled_credits = 0
+
+        # credit flag
+        credit_query = """SELECT Course_Credits, StudentID FROM Enrollment INNER JOIN Course ON Course.CourseID = Enrollment.CouseID"""
+        self.curs.execute(credit_query)
+        credits_per_course_enrolled = self.curs.fetchall()
+
+        for i in credits_per_course_enrolled:
+            if i[1] == self.StudentID:
+                enrolled_credits += i[0]
+
+        # get credits of course trying to be enrolled
+        check_credit_query = """SELECT Course_Credits FROM Course WHERE CourseID = ?"""
+        data = self.CourseID,
+        self.curs.execute(check_credit_query, data)
+        course_credits = self.curs.fetchone()
+
+        tentative_credits = enrolled_credits + course_credits[0]
+        if tentative_credits > credit_limit:
+            self.Over_Credits = 1
+
+        # capacity flag
+        capacity_query = """SELECT Section_Capacity FROM Course_Section WHERE CourseSectionID = ?"""
+        data = self.CourseSectionID,
+        self.curs.execute(capacity_query, data)
+        section_capacity = self.curs.fetchone()
+
+        enrolled_in_section_query = """SELECT COUNT(*) FROM Enrollment WHERE CouseID = ? AND SectionID = ?"""
+        data = self.CourseID, self.SectionID
+        self.curs.execute(enrolled_in_section_query, data)
+        enrolled_in_section = self.curs.fetchall()[0][0]
+        print(enrolled_in_section)
+
+        if enrolled_in_section >= section_capacity[0]:
+            self.Over_Capacity = 1
 
     #def removeFlag(self):
 

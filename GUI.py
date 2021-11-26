@@ -5,6 +5,7 @@ from Course import Course
 from Instructor import Instructor
 from Section import Section
 from Student import Student
+from Enrollment import Enrollment
 
 
 class MainWindow(QMainWindow):
@@ -402,7 +403,7 @@ class InstructorMenu(QMainWindow):
 
     def add_instructor_to_section_submit(self):
         temp_section = Section(0, 0, 0, 0, self.conn, self.curs)
-        courseSection_exists, instructor_exists = temp_section.\
+        courseSection_exists, instructor_exists = temp_section. \
             addInstructorToSection(self.courseSectionID_entry.text().strip(), self.instructorID_entry.text().strip())
 
         if courseSection_exists == 1 and instructor_exists == 1:
@@ -433,7 +434,8 @@ class InstructorMenu(QMainWindow):
     def remove_instructor_from_section_submit(self):
         temp_section = Section(0, 0, 0, 0, self.conn, self.curs)
         courseSection_exists = temp_section. \
-           removeInstructorFromSection(self.courseSectionID_entry.text().strip(), self.instructorID_entry.text().strip())
+            removeInstructorFromSection(self.courseSectionID_entry.text().strip(),
+                                        self.instructorID_entry.text().strip())
         if courseSection_exists == 1:
             self.msg_popup('Instructor removed from Section', QMessageBox.Information)
             self.close_add_instructor_from_section()
@@ -741,7 +743,7 @@ class CourseMenu(QMainWindow):
 
         courseID_exists, sectionID_form, sectionID_exists, instructorID_exists, section_capacity_form = section_to_add.addSection()
         # need to have database check for validity
-        if courseID_exists == 1 and sectionID_form == 0 and sectionID_exists == 0 and instructorID_exists == 1\
+        if courseID_exists == 1 and sectionID_form == 0 and sectionID_exists == 0 and instructorID_exists == 1 \
                 and section_capacity_form == 0:
             # confirmation window
             self.msg_popup('Section Successfully Added to Database', QMessageBox.Information)
@@ -800,6 +802,8 @@ class CourseMenu(QMainWindow):
 class EnrollmentMenu(QMainWindow):
 
     def __init__(self, previous_window, conn: sqlite3.Connection, curs: sqlite3.Cursor):
+        self.curs = curs
+        self.conn = conn
         self.previous_window = previous_window
         super(EnrollmentMenu, self).__init__()
         self.setWindowTitle('NorthStar Registration System/Enrollment')
@@ -809,9 +813,88 @@ class EnrollmentMenu(QMainWindow):
         self.back_button = QPushButton(self)
         self.back_button.setText("Back")
         self.back_button.resize(150, 50)
-        self.back_button.move(50, 200)
+        self.back_button.move(50, 400)
         self.back_button.clicked.connect(self.go_back)
 
+        self.add_student_section_open = False
+        self.add_student_section_button = QPushButton(self)
+        self.add_student_section_button.setText('Add Enrollment')
+        self.add_student_section_button.resize(150, 50)
+        self.add_student_section_button.move(50, 200)
+        self.add_student_section_button.clicked.connect(self.add_student_section)
+
+        # widgets for add_enrollment
+        self.studentID_entry = QLineEdit(self)
+        self.studentID_entry.setPlaceholderText('StudentID')
+        self.studentID_entry.move(400, 200)
+        self.studentID_entry.resize(280, 40)
+        self.studentID_entry.hide()
+
+        self.courseID_entry = QLineEdit(self)
+        self.courseID_entry.setPlaceholderText('Course ID')
+        self.courseID_entry.resize(280, 40)
+        self.courseID_entry.move(400, 250)
+        self.courseID_entry.hide()
+
+        self.sectionNumber_entry = QLineEdit(self)
+        self.sectionNumber_entry.setPlaceholderText('Section Number')
+        self.sectionNumber_entry.resize(280, 40)
+        self.sectionNumber_entry.move(400, 300)
+        self.sectionNumber_entry.hide()
+
+        self.add_student_section_done = QPushButton(self)
+        self.add_student_section_done.setText('Submit Enrollment')
+        self.add_student_section_done.move(400, 350)
+        self.add_student_section_done.resize(150, 50)
+        self.add_student_section_done.clicked.connect(self.add_student_section_submit)
+        self.add_student_section_done.hide()
+
+        # pop up window
+        self.result_msg = QMessageBox(self)
+        self.result_msg.setWindowTitle('Results')
+        self.result_msg.resize(300, 300)
+        self.result_msg.move(400, 300)
+        self.result_msg.hide()
+
+    def msg_popup(self, msg: str, icon):
+        self.result_msg.setText(msg)
+        self.result_msg.setIcon(icon)
+        self.result_msg.show()
+
     def go_back(self):
-        self.previous_window.show()
-        self.hide()
+        if self.add_student_section_open:
+            self.close_add_student_section()
+        else:
+            self.previous_window.show()
+            self.hide()
+
+    def add_student_section(self):
+        self.add_student_section_open = True
+        self.studentID_entry.show()
+        self.courseID_entry.show()
+        self.sectionNumber_entry.show()
+        self.add_student_section_done.show()
+
+    def add_student_section_submit(self):
+        enrollment_to_add = Enrollment(self.studentID_entry.text().strip(), self.courseID_entry.text().strip(),
+                                       self.sectionNumber_entry.text().strip(), self.conn, self.curs)
+        studentID_exists, sectionID_exists, Over_Credits, Over_Capacity = enrollment_to_add.addStudentToSection()
+
+        if studentID_exists == 1 and sectionID_exists == 1:
+            msg = 'Student successfully Enrolled!'
+            if Over_Credits == 1:
+                msg = f'{msg} \n \t Flag: Student over Credit Limit!'
+            if Over_Capacity == 1:
+                msg = f'{msg} \n \t Flag: Section over Capacity!'
+            self.msg_popup(msg, QMessageBox.Information)
+            self.close_add_student_section()
+
+    def close_add_student_section(self):
+        self.studentID_entry.hide()
+        self.courseID_entry.hide()
+        self.sectionNumber_entry.hide()
+        self.add_student_section_done.hide()
+        self.studentID_entry.setText('')
+        self.courseID_entry.setText('')
+        self.sectionNumber_entry.setText('')
+        self.add_student_section_open = False
