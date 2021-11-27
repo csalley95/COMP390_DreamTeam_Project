@@ -2,7 +2,7 @@ import sqlite3
 
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QApplication, QLineEdit, QMessageBox, QRadioButton, QButtonGroup, \
-    QTableWidget, QLabel, QCheckBox
+    QLabel, QCheckBox
 
 from Course import Course
 from Instructor import Instructor
@@ -45,17 +45,17 @@ class MainWindow(QMainWindow):
 
         self.faculty_menu_button.setText("Instructors")
         self.faculty_menu_button.resize(150, 50)
-        self.faculty_menu_button.move(50, 275)
+        self.faculty_menu_button.move(50, 250)
         self.faculty_menu_button.clicked.connect(self.open_faculty_menu)
 
         self.course_menu_button.setText("Courses")
         self.course_menu_button.resize(150, 50)
-        self.course_menu_button.move(50, 350)
+        self.course_menu_button.move(50, 300)
         self.course_menu_button.clicked.connect(self.open_course_menu)
 
         self.enrollment_menu_button.setText("Enrollment")
         self.enrollment_menu_button.resize(150, 50)
-        self.enrollment_menu_button.move(50, 425)
+        self.enrollment_menu_button.move(50, 350)
         self.enrollment_menu_button.clicked.connect(self.open_enrollment_menu)
 
     def open_student_menu(self):
@@ -78,6 +78,7 @@ class MainWindow(QMainWindow):
 class StudentMenu(QMainWindow):
 
     def __init__(self, previous_window, conn: sqlite3.Connection, curs: sqlite3.Cursor):
+        self.opened_labels = []
         self.conn = conn
         self.curs = curs
         self.previous_window = previous_window
@@ -91,6 +92,8 @@ class StudentMenu(QMainWindow):
         self.add_student_button = QPushButton(self)
         self.remove_student_open = False
         self.remove_student_button = QPushButton(self)
+        self.student_information_open = False
+        self.student_information_button = QPushButton(self)
         self.back_button = QPushButton(self)
 
         # add student buttons/text boxes
@@ -127,10 +130,70 @@ class StudentMenu(QMainWindow):
         self.remove_student_done.clicked.connect(self.remove_student_submit)
         self.remove_student_done.hide()
 
+        # widgets for student_information
+        self.student_information_done = QPushButton(self)
+        self.student_information_done.setText('Look Up')
+        self.student_information_done.resize(150, 50)
+        self.student_information_done.move(700, 200)
+        self.student_information_done.hide()
+        self.student_information_done.clicked.connect(self.student_information_submit)
+
+        self.bold_font = QFont()
+        self.bold_font.setPointSize(10)
+        self.bold_font.setBold(True)
+
+        self.student_name_label = QLabel(self)
+        self.student_name_label.resize(200, 50)
+        self.student_name_label.move(250, 50)
+        self.student_name_label.setFont(self.bold_font)
+        self.student_name_label.hide()
+
+        self.studentID_label = QLabel(self)
+        self.studentID_label.resize(200, 50)
+        self.studentID_label.move(450, 50)
+        self.studentID_label.setFont(self.bold_font)
+        self.studentID_label.hide()
+
+        self.course_description_label = QLabel(self)
+        self.course_description_label.setText('Course Description')
+        self.course_description_label.resize(150, 75)
+        self.course_description_label.setFont(self.bold_font)
+        self.course_description_label.move(250, 100)
+        self.course_description_label.hide()
+
+        self.coursesectionID_label = QLabel(self)
+        self.coursesectionID_label.setText('Course Section ID')
+        self.coursesectionID_label.resize(150, 75)
+        self.coursesectionID_label.setFont(self.bold_font)
+        self.coursesectionID_label.move(450, 100)
+        self.coursesectionID_label.hide()
+
+        self.instructor_name_label = QLabel(self)
+        self.instructor_name_label.setText('Instructor')
+        self.instructor_name_label.resize(150, 75)
+        self.instructor_name_label.setFont(self.bold_font)
+        self.instructor_name_label.move(600, 100)
+        self.instructor_name_label.hide()
+
+        self.course_credits_label = QLabel(self)
+        self.course_credits_label.setText('Credits')
+        self.course_credits_label.resize(100, 75)
+        self.course_credits_label.setFont(self.bold_font)
+        self.course_credits_label.move(750, 100)
+        self.course_credits_label.hide()
+
+        self.course_flags_label = QLabel(self)
+        self.course_flags_label.setText('Flags')
+        self.course_flags_label.resize(150, 75)
+        self.course_flags_label.setFont(self.bold_font)
+        self.course_flags_label.move(850, 100)
+        self.course_flags_label.hide()
+
+
         # set up buttons for window
         self.back_button.setText("Back")
         self.back_button.resize(150, 50)
-        self.back_button.move(50, 300)
+        self.back_button.move(50, 350)
         self.back_button.clicked.connect(self.go_back)
 
         self.add_student_button.setText('Add Student')
@@ -142,6 +205,11 @@ class StudentMenu(QMainWindow):
         self.remove_student_button.resize(150, 50)
         self.remove_student_button.move(50, 250)
         self.remove_student_button.clicked.connect(self.remove_student)
+
+        self.student_information_button.setText('Student Information')
+        self.student_information_button.resize(150, 50)
+        self.student_information_button.move(50, 300)
+        self.student_information_button.clicked.connect(self.student_information)
 
         # pop up window
         self.result_msg = QMessageBox(self)
@@ -221,6 +289,97 @@ class StudentMenu(QMainWindow):
         self.remove_student_done.close()
         self.studentID_entry.setText('')
         self.remove_student_open = False
+
+    def student_information(self):
+        self.student_information_open = True
+        self.studentID_entry.show()
+        self.student_information_done.show()
+
+    def student_information_submit(self):
+        # check studentID first
+        check_exists_query = """SELECT EXISTS(SELECT 1 FROM Student WHERE StudentID = ?)"""
+        data = self.studentID_entry.text().strip(),
+        self.curs.execute(check_exists_query, data)
+
+        if self.curs.fetchone()[0] == 1:
+            self.studentID_entry.hide()
+            self.student_information_done.hide()
+            get_name_query = """SELECT Student_Name FROM Student WHERE StudentID = ?"""
+            data = self.studentID_entry.text().strip(),
+            self.curs.execute(get_name_query, data)
+            student_name = self.curs.fetchone()[0]
+
+            self.student_name_label.setText(f'Student Name: {student_name}')
+            self.student_name_label.show()
+            self.studentID_label.setText(f'Student ID: {self.studentID_entry.text().strip()}')
+            self.studentID_label.show()
+            self.course_description_label.show()
+            self.coursesectionID_label.show()
+            self.instructor_name_label.show()
+            self.course_credits_label.show()
+            self.course_flags_label.show()
+
+            get_enrollment_query = """SELECT * FROM Enrollment WHERE StudentID = ?"""
+            data = self.studentID_entry.text().strip(),
+            self.curs.execute(get_enrollment_query, data)
+            student_enrollments = self.curs.fetchall()
+
+            if len(student_enrollments) != 0:
+                j = 1
+
+                course_join_query = """SELECT CourseID, Course_Credits, Course_Description FROM Enrollment 
+                                            INNER JOIN Course ON Course.CourseID = Enrollment.CouseID"""
+                self.curs.execute(course_join_query)
+                course_infos = self.curs.fetchall()
+
+                instructor_join_query = """SELECT Instructor_Name, Instructor.InstructorID, Course_Section.CourseID,
+                                                    Course_Section.SectionID FROM Instructor LEFT JOIN Course_Section
+                                                    ON Course_Section.InstructorID = Instructor.InstructorID LEFT JOIN
+                                                    Enrollment ON Course_Section.CourseID = Enrollment.CouseID"""
+                self.curs.execute(instructor_join_query)
+                instructor_infos = self.curs.fetchall()
+
+                for i in student_enrollments:
+                    self.courseID = i[1]
+                    self.sectionID = i[2]
+                    self.credit_flag = i[4]
+                    self.capacity_flag = i[5]
+
+                    # get course credits and description
+                    for courses in course_infos:
+                        if courses[0] == self.courseID:
+                            self.course_credits = f'{courses[1]}'
+                            self.course_description = f'{courses[2]}'
+                            break
+
+                    # get instructor names
+                    for instructors in instructor_infos:
+                        if instructors[2] == self.courseID and instructors[3] == self.sectionID:
+                            self.instructor_name = instructors[0]
+                            break
+                        else:
+                            self.instructor_name = 'N/A'
+
+                    # make information labels for row
+                    ylocation = (j * 50) + 100
+                    self.make_label(f'{self.course_description}', 250, ylocation)
+                    self.make_label(f'{self.courseID}-{self.sectionID}', 450, ylocation)
+                    self.make_label(f'{self.instructor_name}', 600, ylocation)
+                    self.make_label(f'{self.course_credits}', 750, ylocation)
+                    if self.credit_flag == 1:
+                        self.make_label(f'Credits', 850, ylocation)
+                    if self.capacity_flag == 1:
+                        self.make_label(f'Capacity', 900, ylocation)
+                    j += 1
+
+
+    def make_label(self, text: str, xlocation, ylocation):
+        label = QLabel(self)
+        label.setText(text)
+        label.resize(200, 75)
+        label.move(xlocation, ylocation)
+        self.opened_labels.append(label)
+        label.show()
 
 
 class InstructorMenu(QMainWindow):
