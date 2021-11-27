@@ -1,6 +1,8 @@
 import sqlite3
+
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QApplication, QLineEdit, QMessageBox, QRadioButton, QButtonGroup, \
-    QTableWidget
+    QTableWidget, QLabel, QCheckBox
 
 from Course import Course
 from Instructor import Instructor
@@ -803,6 +805,7 @@ class CourseMenu(QMainWindow):
 class EnrollmentMenu(QMainWindow):
 
     def __init__(self, previous_window, conn: sqlite3.Connection, curs: sqlite3.Cursor):
+        self.flag_list = []
         self.curs = curs
         self.conn = conn
         self.previous_window = previous_window
@@ -881,11 +884,36 @@ class EnrollmentMenu(QMainWindow):
         self.flag_lookup.hide()
 
         self.remove_flag_done = QPushButton(self)
-        self.remove_flag_done.setText('Delete Flag')
-        self.remove_flag_done.move(400, 400)
+        self.remove_flag_done.setText('Removes Flag(s)')
+        self.remove_flag_done.move(300, 600)
         self.remove_flag_done.resize(150, 50)
         self.remove_flag_done.clicked.connect(self.remove_flag_submit)
         self.remove_flag_done.hide()
+
+        self.bold_font = QFont()
+        self.bold_font.setPointSize(10)
+        self.bold_font.setBold(True)
+
+        self.associated_flags = QLabel(self)
+        self.associated_flags.setText('Associated Flags')
+        self.associated_flags.resize(200, 75)
+        self.associated_flags.move(300, 100)
+        self.associated_flags.setFont(self.bold_font)
+        self.associated_flags.hide()
+
+        self.course_section_label = QLabel(self)
+        self.course_section_label.setText('Course Section ID')
+        self.course_section_label.resize(200, 75)
+        self.course_section_label.move(500, 100)
+        self.course_section_label.setFont(self.bold_font)
+        self.course_section_label.hide()
+
+        self.check_to_remove = QLabel(self)
+        self.check_to_remove.setText('Check to Remove')
+        self.check_to_remove.resize(200, 75)
+        self.check_to_remove.move(700, 100)
+        self.check_to_remove.setFont(self.bold_font)
+        self.check_to_remove.hide()
 
         # pop up window
         self.result_msg = QMessageBox(self)
@@ -989,32 +1017,81 @@ class EnrollmentMenu(QMainWindow):
         self.flag_lookup.show()
 
     def student_flag_lookup(self):
-        find_flags_query = """SELECT CouseID, SectionID, Over_Credit_Flag, Over_Capacity_Flag FROM Enrollment WHERE StudentID = ?"""
+        # check if studentID exists
+        check_exists_query = """SELECT EXISTS(SELECT 1 FROM Student WHERE StudentID = ?)"""
         data = self.studentID_entry.text().strip(),
-        self.curs.execute(find_flags_query, data)
-        flags_found = self.curs.fetchall()
+        self.curs.execute(check_exists_query, data)
 
-        flag_list = []
-        # categorizing flags
-        for i in flags_found:
-            if i[2] == 1:
-                flag_list.append([i[i][0], i[i][1], 'Credit Limit Exceeded'])
-            if i[3] == 1:
-                flag_list.append([i[i][0], i[i][1], 'Section Capacity Exceeded'])
+        if self.curs.fetchone()[0] == 1:
+            self.opened_labels = []
+            self.opened_checkboxes = []
+            self.studentID_entry.hide()
+            self.flag_lookup.hide()
+            find_flags_query = """SELECT CouseID, SectionID, Over_Credit_Flag, Over_Capacity_Flag FROM Enrollment WHERE StudentID = ?"""
+            data = self.studentID_entry.text().strip(),
+            self.curs.execute(find_flags_query, data)
+            flags_found = self.curs.fetchall()
 
-        self.flag_table = QTableWidget(3, len(flag_list))
-        for i in flag_list:
-            self.flag_table.insertRow(i)
+            # categorizing flags
+            for i in flags_found:
+                if i[2] == '1':
+                    cb = QCheckBox(self)
+                    self.opened_checkboxes.append(cb)
+                    cb.hide()
+                    self.flag_list.append([i[0], i[1], 'Credit Limit Exceeded', cb])
+                if i[3] == '1':
+                    cb = QCheckBox(self)
+                    self.opened_checkboxes.append(cb)
+                    cb.hide()
+                    self.flag_list.append([i[0], i[1], 'Section Capacity Exceeded', cb])
 
-        self.flag_table.show()
+            if len(self.flag_list) != 0:
+                j = 1
+                self.remove_flag_done.show()
+                self.associated_flags.show()
+                self.course_section_label.show()
+                self.check_to_remove.show()
+                for i in self.flag_list:
+                    self.make_label(f'{i[2]}', 300, (j * 50) + 100)
+                    self.make_label(f'{i[0]}-{i[1]}', 500, (j * 50) + 100)
+                    self.display_CheckBoxes(i[3], 750, (j * 50) + 125)
+                    j += 1
+            else:
+                self.msg_popup('No flags detected!', QMessageBox.Warning)
 
-
-
-
-
+        else:
+            self.msg_popup('Errors Detected! \n Invalid Student ID: Student ID does not exist', QMessageBox.Warning)
 
     def remove_flag_submit(self):
-        enrollment_to_edit = Enrollment(self.studentID_entry.text().strip(), 0,
-                                        0, self.conn, self.curs)
+        for i in self.flag_list:
+            if i[3].isChecked():
+                temp_enrollment = Enrollment(self.studentID_entry.text().strip(), i[0], i[1], self.conn, self.curs)
+                temp_enrollment.removeFlag(i[2])
 
+        self.msg_popup('Flags Successfully Remove!', QMessageBox.Information)
+        self.close_remove_flag()
 
+    def close_remove_flag(self):
+        self.associated_flags.hide()
+        self.course_section_label.hide()
+        self.check_to_remove.hide()
+        self.remove_flag_done.hide()
+        for i in self.opened_labels:
+            i.hide()
+            i.setText('')
+        for i in self.opened_checkboxes:
+            i.close()
+            i.setChecked(False)
+        self.remove_flag_open = False
+
+    def make_label(self, text: str, xlocation, ylocation):
+        label = QLabel(self)
+        label.setText(text)
+        label.resize(200, 75)
+        label.move(xlocation, ylocation)
+        self.opened_labels.append(label)
+        label.show()
+
+    def display_CheckBoxes(self, cb: QCheckBox, xlocation, ylocation):
+        cb.move(xlocation, ylocation)
+        cb.show()

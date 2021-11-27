@@ -77,9 +77,17 @@ class Enrollment:
         if enrolled_in_section >= section_capacity[0]:
             self.Over_Capacity = 1
 
-    def removeFlag(self):
-        print()
-
+    def removeFlag(self, flag):
+        if flag == 'Credit Limit Exceeded':
+            sql_update_query = """UPDATE Enrollment SET Over_Credit_Flag = 0 WHERE StudentID = ? AND CouseID = ? AND SectionID = ?"""
+            data = self.StudentID, self.CourseID, self.SectionID
+            self.curs.execute(sql_update_query, data)
+            self.conn.commit()
+        else:
+            sql_update_query = """UPDATE Enrollment SET Over_Capacity_Flag = 0 WHERE StudentID = ? AND CouseID = ? AND SectionID = ?"""
+            data = self.StudentID, self.CourseID, self.SectionID
+            self.curs.execute(sql_update_query, data)
+            self.conn.commit()
 
     def check_CourseSectionID_StudentID(self):
         check_exists_query = """SELECT EXISTS(SELECT 1 FROM Course_Section WHERE CourseSectionID = ?)"""
@@ -93,11 +101,3 @@ class Enrollment:
         self.curs.execute(check_exists_query, data)
         if self.curs.fetchone()[0] == 1:
             self.studentID_exists = 1
-
-
-    def check_student_flags(self):
-        find_flags_query = """SELECT Over_Credit_Flag, Over_Capacity_Flag FROM Enrollment WHERE StudentID = ?"""
-        data = self.StudentID,
-        self.curs.execute(find_flags_query, data)
-        flags_found = self.curs.fetchall()
-
