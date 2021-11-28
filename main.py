@@ -23,7 +23,6 @@ def main():
     window.show()
     sys.exit(app.exec_())
 
-    #close_db(conn)
 
 
 def open_db(filename: str) -> Tuple[sql.Connection, sql.Cursor]:
