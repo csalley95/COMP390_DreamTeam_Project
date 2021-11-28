@@ -964,6 +964,8 @@ class CourseMenu(QMainWindow):
 class EnrollmentMenu(QMainWindow):
 
     def __init__(self, previous_window, conn: sqlite3.Connection, curs: sqlite3.Cursor):
+        self.opened_checkboxes = []
+        self.opened_labels = []
         self.flag_list = []
         self.curs = curs
         self.conn = conn
@@ -1182,8 +1184,6 @@ class EnrollmentMenu(QMainWindow):
         self.curs.execute(check_exists_query, data)
 
         if self.curs.fetchone()[0] == 1:
-            self.opened_labels = []
-            self.opened_checkboxes = []
             self.studentID_entry.hide()
             self.flag_lookup.hide()
             find_flags_query = """SELECT CouseID, SectionID, Over_Credit_Flag, Over_Capacity_Flag FROM Enrollment WHERE StudentID = ?"""
@@ -1235,12 +1235,16 @@ class EnrollmentMenu(QMainWindow):
         self.course_section_label.hide()
         self.check_to_remove.hide()
         self.remove_flag_done.hide()
-        for i in self.opened_labels:
-            i.hide()
-            i.setText('')
-        for i in self.opened_checkboxes:
-            i.close()
-            i.setChecked(False)
+        self.studentID_entry.hide()
+        self.studentID_entry.setText('')
+        self.flag_lookup.hide()
+        if self.opened_labels is not None and self.opened_checkboxes is not None:
+            for i in self.opened_labels:
+                i.hide()
+                i.setText('')
+            for i in self.opened_checkboxes:
+                i.close()
+                i.setChecked(False)
         self.remove_flag_open = False
 
     def make_label(self, text: str, xlocation, ylocation):
