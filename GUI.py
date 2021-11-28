@@ -575,12 +575,16 @@ class InstructorMenu(QMainWindow):
     def remove_instructor_submit(self):
         instructor_to_remove = Instructor(self.instructorID_entry.text().strip(), 0,
                                           self.conn, self.curs)
-        instructor_to_remove.removeInstructor()
         # check for validity
+        instructorID_exists = instructor_to_remove.removeInstructor()
         # display confirmation
-        confirmation = 'Instructor removed from Database!'
-        self.msg_popup(confirmation, QMessageBox.Warning)
-        self.close_remove_instructor()
+        if instructorID_exists == 1:
+            confirmation = 'Instructor removed from Database!'
+            self.msg_popup(confirmation, QMessageBox.Information)
+            self.close_remove_instructor()
+        else:
+            error_msg = f'Errors Detected! \n Invalid Instructor ID: Instructor ID does not exist'
+            self.msg_popup(error_msg, QMessageBox.Warning)
 
     def close_remove_instructor(self):
         self.instructorID_entry.hide()

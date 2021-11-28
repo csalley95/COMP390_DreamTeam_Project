@@ -18,24 +18,36 @@ class Instructor:
         return instructorID_form, instructorID_exists
 
     def removeInstructor(self):
-        sql_update_query = """DELETE FROM Instructor WHERE InstructorID = ?"""
+        check_exists_query = """SELECT EXISTS(SELECT 1 FROM instructor WHERE instructorID = ? )"""
         data = self.instructorID,
-        self.curs.execute(sql_update_query, data)
-        self.conn.commit()
+        self.curs.execute(check_exists_query, data)
+        if self.curs.fetchone()[0] == 1:
+            self.instructorID_exists = 1
+            sql_update_query = """DELETE FROM Instructor WHERE InstructorID = ?"""
+            data = self.instructorID,
+            self.curs.execute(sql_update_query, data)
+            self.conn.commit()
+        else:
+            self.instructorID_exists = 0
+
+        return self.instructorID_exists
 
     def valid_instructorID(self):
         self.instructorID_form = 0
         self.instructorID_exists = 0
 
-        for i in range(len(self.instructorID)):
-            if not self.instructorID[i].isdigit():
-                self.instructorID_form = 1
-                break
+        if len(self.instructorID) == 8:
+                for i in range(len(self.instructorID)):
+                    if not self.instructorID[i].isdigit():
+                        self.instructorID_form = 1
+                        break
+        else:
+            self.instructorID = 1
 
         check_exists_query = """SELECT EXISTS(SELECT 1 FROM instructor WHERE instructorID = ? )"""
         data = self.instructorID,
         self.curs.execute(check_exists_query, data)
-        # only commits if course doesnt already exist
+        # only commits if instructor doesnt already exist
         if self.curs.fetchone()[0] == 1:
             self.instructorID_exists = 1
 
