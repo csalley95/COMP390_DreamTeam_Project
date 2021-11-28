@@ -36,11 +36,11 @@ class Instructor:
         self.instructorID_form = 0
         self.instructorID_exists = 0
 
-        if len(self.instructorID) == 8:
-                for i in range(len(self.instructorID)):
-                    if not self.instructorID[i].isdigit():
-                        self.instructorID_form = 1
-                        break
+        if len(str(self.instructorID)) == 8:
+            for i in range(len(str(self.instructorID))):
+                if not str(self.instructorID)[i].isdigit():
+                    self.instructorID_form = 1
+                    break
         else:
             self.instructorID = 1
 
