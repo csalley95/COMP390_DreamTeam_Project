@@ -42,9 +42,9 @@ class Instructor:
                     self.instructorID_form = 1
                     break
         else:
-            self.instructorID = 1
+            self.instructorID_form = 1
 
-        check_exists_query = """SELECT EXISTS(SELECT 1 FROM instructor WHERE instructorID = ? )"""
+        check_exists_query = """SELECT EXISTS(SELECT 1 FROM Instructor WHERE InstructorID = ?)"""
         data = self.instructorID,
         self.curs.execute(check_exists_query, data)
         # only commits if instructor doesnt already exist

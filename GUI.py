@@ -555,7 +555,7 @@ class InstructorMenu(QMainWindow):
             if instructorID_form == 1:
                 error_str = error_str + '\n Invalid InstructorID: Incorrect form'
             if instructorID_exists == 1:
-                error_str = error_str + '\n Invalid InstructorID: CourseID already exists'
+                error_str = error_str + '\n Invalid InstructorID: Instructor ID already exists'
 
             self.msg_popup(error_str, QMessageBox.Warning)
 
