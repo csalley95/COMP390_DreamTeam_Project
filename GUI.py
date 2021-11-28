@@ -78,6 +78,7 @@ class MainWindow(QMainWindow):
 class StudentMenu(QMainWindow):
 
     def __init__(self, previous_window, conn: sqlite3.Connection, curs: sqlite3.Cursor):
+        self.total_credits = 0
         self.opened_labels = []
         self.conn = conn
         self.curs = curs
@@ -154,6 +155,12 @@ class StudentMenu(QMainWindow):
         self.studentID_label.setFont(self.bold_font)
         self.studentID_label.hide()
 
+        self.total_credits_label = QLabel(self)
+        self.total_credits_label.resize(200, 50)
+        self.total_credits_label.move(650, 50)
+        self.total_credits_label.setFont(self.bold_font)
+        self.total_credits_label.hide()
+
         self.course_description_label = QLabel(self)
         self.course_description_label.setText('Course Description')
         self.course_description_label.resize(150, 75)
@@ -188,7 +195,6 @@ class StudentMenu(QMainWindow):
         self.course_flags_label.setFont(self.bold_font)
         self.course_flags_label.move(850, 100)
         self.course_flags_label.hide()
-
 
         # set up buttons for window
         self.back_button.setText("Back")
@@ -228,6 +234,8 @@ class StudentMenu(QMainWindow):
             self.close_add_student()
         elif self.remove_student_open:
             self.close_remove_student()
+        elif self.student_information_open:
+            self.close_student_information()
         else:
             self.previous_window.show()
             self.close()
@@ -349,6 +357,7 @@ class StudentMenu(QMainWindow):
                     for courses in course_infos:
                         if courses[0] == self.courseID:
                             self.course_credits = f'{courses[1]}'
+                            self.total_credits += int(courses[1])
                             self.course_description = f'{courses[2]}'
                             break
 
@@ -372,6 +381,28 @@ class StudentMenu(QMainWindow):
                         self.make_label(f'Capacity', 900, ylocation)
                     j += 1
 
+        self.total_credits_label.setText(f'Total Credits: {self.course_credits}')
+        self.total_credits_label.show()
+
+    def close_student_information(self):
+        self.student_name_label.setText('')
+        self.student_name_label.hide()
+        self.studentID_label.setText('')
+        self.studentID_label.hide()
+        self.course_description_label.hide()
+        self.coursesectionID_label.hide()
+        self.instructor_name_label.hide()
+        self.course_credits_label.hide()
+        self.course_flags_label.hide()
+        self.total_credits_label.hide()
+        self.total_credits_label.setText('')
+
+        if self.opened_labels is not None:
+            for i in self.opened_labels:
+                i.setText('')
+                i.hide()
+
+        self.student_information_open = False
 
     def make_label(self, text: str, xlocation, ylocation):
         label = QLabel(self)
