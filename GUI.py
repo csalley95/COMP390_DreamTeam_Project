@@ -990,7 +990,7 @@ class CourseMenu(QMainWindow):
             self.msg_popup('Invalid Section ID: Section ID does not exist', QMessageBox.Warning)
 
     def close_remove_section(self):
-        self.couseSectionID_entry.close()
+        self.courseSectionID_entry.close()
         self.remove_section_done.close()
         self.courseSectionID_entry.setText('')
         self.remove_section_open = False
@@ -1013,7 +1013,7 @@ class EnrollmentMenu(QMainWindow):
         self.back_button = QPushButton(self)
         self.back_button.setText("Back")
         self.back_button.resize(150, 50)
-        self.back_button.move(50, 400)
+        self.back_button.move(50, 350)
         self.back_button.clicked.connect(self.go_back)
 
         self.add_student_section_open = False
