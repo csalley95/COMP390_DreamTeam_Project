@@ -236,11 +236,20 @@ class StudentMenu(QMainWindow):
             self.close_remove_student()
         elif self.student_information_open:
             self.close_student_information()
-        else:
-            self.previous_window.show()
-            self.close()
+
+        self.previous_window.show()
+        self.close()
+
+    def check_for_open_submenus(self):
+        if self.add_student_open:
+            self.close_add_student()
+        if self.remove_student_open:
+            self.close_remove_student()
+        if self.student_information_open:
+            self.close_student_information()
 
     def add_student(self):
+        self.check_for_open_submenus()
         self.add_student_open = True
         self.studentID_entry.show()
         self.studentName_entry.show()
@@ -276,6 +285,7 @@ class StudentMenu(QMainWindow):
         self.add_student_open = False
 
     def remove_student(self):
+        self.check_for_open_submenus()
         self.remove_student_open = True
         self.studentID_entry.show()
         self.remove_student_done.show()
@@ -299,6 +309,7 @@ class StudentMenu(QMainWindow):
         self.remove_student_open = False
 
     def student_information(self):
+        self.check_for_open_submenus()
         self.student_information_open = True
         self.studentID_entry.show()
         self.student_information_done.show()
@@ -396,6 +407,7 @@ class StudentMenu(QMainWindow):
         self.course_flags_label.hide()
         self.total_credits_label.hide()
         self.total_credits_label.setText('')
+        self.student_information_done.hide()
 
         if self.opened_labels is not None:
             for i in self.opened_labels:
@@ -530,11 +542,22 @@ class InstructorMenu(QMainWindow):
             self.close_add_instructor_to_section()
         elif self.remove_instructor_from_section_open:
             self.close_remove_instructor_from_section()
-        else:
-            self.previous_window.show()
-            self.hide()
+
+        self.previous_window.show()
+        self.hide()
+
+    def check_for_open_submenus(self):
+        if self.add_instructor_open:
+            self.close_add_instructor()
+        if self.remove_instructor_open:
+            self.close_remove_instructor()
+        if self.add_instructor_to_section_open:
+            self.close_add_instructor_to_section()
+        if self.remove_instructor_from_section_open:
+            self.close_remove_instructor_from_section()
 
     def add_instructor(self):
+        self.check_for_open_submenus()
         self.add_instructor_open = True
         self.instructorID_entry.show()
         self.instructor_Name_entry.show()
@@ -568,6 +591,7 @@ class InstructorMenu(QMainWindow):
         self.add_instructor_open = False
 
     def remove_instructor(self):
+        self.check_for_open_submenus()
         self.remove_instructor_open = True
         self.instructorID_entry.show()
         self.remove_instructor_done.show()
@@ -593,6 +617,7 @@ class InstructorMenu(QMainWindow):
         self.remove_instructor_open = False
 
     def add_instructor_to_section(self):
+        self.check_for_open_submenus()
         self.add_instructor_to_section_open = True
         self.instructorID_entry.show()
         self.courseSectionID_entry.show()
@@ -623,6 +648,7 @@ class InstructorMenu(QMainWindow):
         self.add_instructor_to_section_open = False
 
     def remove_instructor_from_section(self):
+        self.check_for_open_submenus()
         self.remove_instructor_from_section_open = True
         self.instructorID_entry.show()
         self.courseSectionID_entry.show()
@@ -820,11 +846,22 @@ class CourseMenu(QMainWindow):
             self.close_add_section()
         elif self.remove_section_open:
             self.close_remove_section()
-        else:
-            self.previous_window.show()
-            self.close()
+
+        self.previous_window.show()
+        self.close()
+
+    def check_for_open_submenus(self):
+        if self.add_course_open:
+            self.close_add_course()
+        if self.edit_course_open:
+            self.close_edit_course()
+        if self.add_section_open:
+            self.close_add_section()
+        if self.remove_section_open:
+            self.close_remove_section()
 
     def add_course(self):
+        self.check_for_open_submenus()
         self.add_course_open = True
         self.courseID_entry.show()
         self.course_credits_entry.show()
@@ -863,6 +900,7 @@ class CourseMenu(QMainWindow):
         self.add_course_open = False
 
     def edit_course(self):
+        self.check_for_open_submenus()
         self.edit_course_open = True
         self.courseID_entry.show()
         self.get_course_info_button.show()
@@ -919,11 +957,13 @@ class CourseMenu(QMainWindow):
         self.edit_course_open = False
 
     def add_section(self):
+        self.check_for_open_submenus()
         self.add_section_open = True
         self.courseID_entry.show()
         self.sectionNumber_entry.show()
         self.add_section_done.show()
         self.instructorID_entry.show()
+        self.assign_instructor_no.setChecked(True)
         self.assign_instructor_yes.show()
         self.assign_instructor_no.show()
         self.sectionCapacity_entry.show()
@@ -975,6 +1015,7 @@ class CourseMenu(QMainWindow):
         self.add_section_open = False
 
     def remove_section(self):
+        self.check_for_open_submenus()
         self.remove_section_open = True
         self.courseSectionID_entry.show()
         self.remove_section_done.show()
@@ -1130,11 +1171,20 @@ class EnrollmentMenu(QMainWindow):
             self.close_remove_student_section()
         elif self.remove_flag_open:
             self.close_remove_flag()
-        else:
-            self.previous_window.show()
-            self.hide()
+
+        self.previous_window.show()
+        self.hide()
+
+    def check_for_open_submenus(self):
+        if self.add_student_section_open:
+            self.close_add_student_section()
+        if self.remove_student_section_open:
+            self.close_remove_student_section()
+        if self.remove_flag_open:
+            self.close_remove_flag()
 
     def add_student_section(self):
+        self.check_for_open_submenus()
         self.add_student_section_open = True
         self.studentID_entry.show()
         self.courseID_entry.show()
@@ -1173,6 +1223,7 @@ class EnrollmentMenu(QMainWindow):
         self.add_student_section_open = False
 
     def remove_student_section(self):
+        self.check_for_open_submenus()
         self.remove_student_section_open = True
         self.studentID_entry.show()
         self.courseID_entry.show()
@@ -1208,6 +1259,7 @@ class EnrollmentMenu(QMainWindow):
         self.remove_student_section_open = False
 
     def remove_flag(self):
+        self.check_for_open_submenus()
         self.remove_flag_open = True
         self.studentID_entry.show()
         self.flag_lookup.show()
