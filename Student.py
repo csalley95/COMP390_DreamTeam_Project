@@ -36,7 +36,18 @@ class Student:
         return self.studentID_form, self.studentID_exists
 
     def removeStudent(self):
-        sql_delete_query = """DELETE FROM Student WHERE studentID = ?"""
+        check_exists_query = """SELECT EXISTS(SELECT 1 FROM Student WHERE studentID = ? )"""
         data = self.studentID,
-        self.curs.execute(sql_delete_query, data)
-        self.conn.commit()
+        self.curs.execute(check_exists_query, data)
+        # only commits if course doesnt already exist
+        if self.curs.fetchone()[0] == 1:
+            self.studentID_exists = 1
+
+            sql_delete_query = """DELETE FROM Student WHERE studentID = ?"""
+            data = self.studentID,
+            self.curs.execute(sql_delete_query, data)
+            self.conn.commit()
+        else:
+            self.studentID_exists = 0
+
+        return self.studentID_exists

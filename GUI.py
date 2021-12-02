@@ -294,14 +294,15 @@ class StudentMenu(QMainWindow):
     def remove_student_submit(self):
         student_to_remove = Student(self.studentID_entry.text().strip(), 0,
                                     self.conn, self.curs)
-        student_to_remove.removeStudent()
+        studentID_exists = student_to_remove.removeStudent()
         # check for validity
         # display confirmation
-        confirmation = 'Student removed from Database!'
-        self.msg_popup(confirmation, QMessageBox.Information)
-        self.close_remove_student()
-
-        # add student doesnt exist error
+        if studentID_exists == 1:
+            confirmation = 'Student removed from Database!'
+            self.msg_popup(confirmation, QMessageBox.Information)
+            self.close_remove_student()
+        else:
+            self.msg_popup('Errors Detected! \n Invalid Student ID: Student ID does not exist', QMessageBox.Warning)
 
     def close_remove_student(self):
         self.studentID_entry.close()

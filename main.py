@@ -14,7 +14,7 @@ from Enrollment import Enrollment
 
 
 def main():
-    conn, curs = open_db('NorthStarProject.db')
+    conn, curs = open_db('Production_NorthStarProject.db')
 
     #test_select(curs, """SELECT * FROM Course WHERE CourseID = 'DRM150' """)
 
