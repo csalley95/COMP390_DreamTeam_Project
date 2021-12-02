@@ -79,6 +79,7 @@ class StudentMenu(QMainWindow):
 
     def __init__(self, previous_window, conn: sqlite3.Connection, curs: sqlite3.Cursor):
         self.total_credits = 0
+        self.course_credits = ''
         self.opened_labels = []
         self.conn = conn
         self.curs = curs
