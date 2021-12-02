@@ -319,6 +319,7 @@ class StudentMenu(QMainWindow):
         check_exists_query = """SELECT EXISTS(SELECT 1 FROM Student WHERE StudentID = ?)"""
         data = self.studentID_entry.text().strip(),
         self.curs.execute(check_exists_query, data)
+        self.total_credits = 0
 
         if self.curs.fetchone()[0] == 1:
             self.studentID_entry.hide()
@@ -363,6 +364,8 @@ class StudentMenu(QMainWindow):
                     self.sectionID = i[2]
                     self.credit_flag = i[4]
                     self.capacity_flag = i[5]
+                    self.course_credits = ''
+                    self.course_description = ''
 
                     # get course credits and description
                     for courses in course_infos:
@@ -386,20 +389,24 @@ class StudentMenu(QMainWindow):
                     self.make_label(f'{self.courseID}-{self.sectionID}', 450, ylocation)
                     self.make_label(f'{self.instructor_name}', 600, ylocation)
                     self.make_label(f'{self.course_credits}', 750, ylocation)
-                    if self.credit_flag == 1:
+                    print(self.credit_flag)
+                    if int(self.credit_flag) == 1:
                         self.make_label(f'Credits', 850, ylocation)
-                    if self.capacity_flag == 1:
+                    if int(self.capacity_flag) == 1:
                         self.make_label(f'Capacity', 900, ylocation)
                     j += 1
 
-        self.total_credits_label.setText(f'Total Credits: {self.course_credits}')
-        self.total_credits_label.show()
+            self.total_credits_label.setText(f'Total Credits: {self.total_credits}')
+            self.total_credits_label.show()
+        else:
+            self.msg_popup('Errors Detected! \n Invalid Student ID: Student ID does not exist', QMessageBox.Warning)
 
     def close_student_information(self):
         self.student_name_label.setText('')
         self.student_name_label.hide()
         self.studentID_label.setText('')
         self.studentID_label.hide()
+        self.studentID_entry.setText('')
         self.course_description_label.hide()
         self.coursesectionID_label.hide()
         self.instructor_name_label.hide()
